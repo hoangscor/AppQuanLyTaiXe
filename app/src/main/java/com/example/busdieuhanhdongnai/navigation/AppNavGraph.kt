@@ -1,5 +1,6 @@
 package com.example.busdieuhanhdongnai.navigation
 
+import com.example.busdieuhanhdongnai.feature.driver.qr.QrCheckInScreen // màn quét QR
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripEntryScreen // màn nhập dữ liệu chuyến
 import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationScreen // màn hình thông báo
 import com.example.busdieuhanhdongnai.feature.driver.schedule.ScheduleScreen // màn hình lịch trình
@@ -32,16 +33,19 @@ fun AppNavGraph() {
 
         composable(Routes.DRIVER_HOME) {
             DriverHomeScreen(
-                onOpenSchedule = {
-                    navController.navigate(Routes.SCHEDULE) // mở màn lịch trình
-                },
-                onOpenNotifications = {
-                    navController.navigate(Routes.NOTIFICATIONS) // mở màn thông báo
-                },
-                onOpenTripEntry = {
-                    navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
-                }
-            )
+            onOpenSchedule = {
+                navController.navigate(Routes.SCHEDULE) // mở màn lịch trình
+            },
+            onOpenNotifications = {
+                navController.navigate(Routes.NOTIFICATIONS) // mở màn thông báo
+            },
+            onOpenTripEntry = {
+                navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
+            },
+            onOpenQrCheckIn = {
+                navController.navigate(Routes.QR_CHECKIN) // mở màn quét QR
+            }
+        )
         }
 
         composable(Routes.SCHEDULE) { // khai báo màn lịch trình
@@ -60,6 +64,13 @@ fun AppNavGraph() {
         }
         composable(Routes.TRIP_ENTRY) { // khai báo màn nhập dữ liệu chuyến
             TripEntryScreen(
+                onBack = {
+                    navController.popBackStack() // quay về trang trước
+                }
+            )
+        }
+        composable(Routes.QR_CHECKIN) { // khai báo màn quét QR
+            QrCheckInScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
                 }

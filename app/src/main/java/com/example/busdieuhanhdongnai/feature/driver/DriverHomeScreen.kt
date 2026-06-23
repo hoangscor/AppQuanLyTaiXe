@@ -35,7 +35,8 @@ private val DriverGreen = Color(0xFF1A9B54)
 fun DriverHomeScreen(
     onOpenSchedule: () -> Unit = {}, // mở màn lịch trình
     onOpenNotifications: () -> Unit = {}, // mở màn thông báo
-    onOpenTripEntry: () -> Unit = {} // mở màn nhập dữ liệu chuyến
+    onOpenTripEntry: () -> Unit = {}, // mở màn nhập dữ liệu chuyến
+    onOpenQrCheckIn: () -> Unit = {} // mở màn quét QR
 ) {
     Column(
         modifier = Modifier
@@ -141,7 +142,8 @@ fun DriverHomeScreen(
                 DriverMenuCard(
                     icon = "▣",
                     title = "Quét QR /\nThẻ điện tử",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenQrCheckIn // bấm để mở màn quét QR
                 )
 
                 DriverMenuCard(
