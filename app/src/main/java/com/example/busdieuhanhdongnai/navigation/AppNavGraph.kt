@@ -1,5 +1,6 @@
 package com.example.busdieuhanhdongnai.navigation
 
+import com.example.busdieuhanhdongnai.feature.driver.schedule.ScheduleScreen // màn hình lịch trình
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -28,7 +29,19 @@ fun AppNavGraph() {
         }
 
         composable(Routes.DRIVER_HOME) {
-            DriverHomeScreen()
+            DriverHomeScreen(
+                onOpenSchedule = {
+                    navController.navigate(Routes.SCHEDULE) // mở màn lịch trình
+                }
+            )
+        }
+
+        composable(Routes.SCHEDULE) { // khai báo màn lịch trình
+            ScheduleScreen(
+                onBack = {
+                    navController.popBackStack() // quay về trang trước
+                }
+            )
         }
     }
 }

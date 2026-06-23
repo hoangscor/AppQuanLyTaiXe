@@ -26,13 +26,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import androidx.compose.foundation.clickable
 private val DriverBlue = Color(0xFF0066CC)
 private val DriverBackground = Color(0xFFF6F8FC)
 private val DriverGreen = Color(0xFF1A9B54)
 
 @Composable
-fun DriverHomeScreen() {
+fun DriverHomeScreen(onOpenSchedule: () -> Unit = {}) { // nối lịch trình ngày
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -156,7 +156,8 @@ fun DriverHomeScreen() {
                 DriverMenuCard(
                     icon = "▤",
                     title = "Lịch trình\nngày",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenSchedule
                 )
 
                 DriverMenuCard(
@@ -205,10 +206,13 @@ fun DriverHomeScreen() {
 fun DriverMenuCard(
     icon: String,
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier.height(112.dp),
+        modifier = modifier
+            .height(112.dp)
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
