@@ -32,7 +32,10 @@ private val DriverBackground = Color(0xFFF6F8FC)
 private val DriverGreen = Color(0xFF1A9B54)
 
 @Composable
-fun DriverHomeScreen(onOpenSchedule: () -> Unit = {}) { // nối lịch trình ngày
+fun DriverHomeScreen(
+    onOpenSchedule: () -> Unit = {}, // mở màn lịch trình
+    onOpenNotifications: () -> Unit = {} // mở màn thông báo
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -159,11 +162,11 @@ fun DriverHomeScreen(onOpenSchedule: () -> Unit = {}) { // nối lịch trình n
                     modifier = Modifier.weight(1f),
                     onClick = onOpenSchedule
                 )
-
                 DriverMenuCard(
                     icon = "🔔",
                     title = "Thông báo",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenNotifications // bấm để mở thông báo
                 )
             }
 
