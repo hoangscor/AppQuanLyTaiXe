@@ -36,7 +36,8 @@ fun DriverHomeScreen(
     onOpenSchedule: () -> Unit = {}, // mở màn lịch trình
     onOpenNotifications: () -> Unit = {}, // mở màn thông báo
     onOpenTripEntry: () -> Unit = {}, // mở màn nhập dữ liệu chuyến
-    onOpenQrCheckIn: () -> Unit = {} // mở màn quét QR
+    onOpenQrCheckIn: () -> Unit = {}, // mở màn quét QR
+    onOpenIncidentReport: () -> Unit = {} // mở màn báo cáo sự cố
 ) {
     Column(
         modifier = Modifier
@@ -171,6 +172,12 @@ fun DriverHomeScreen(
                     title = "Thông báo",
                     modifier = Modifier.weight(1f),
                     onClick = onOpenNotifications // bấm để mở thông báo
+                )
+                DriverMenuCard(
+                    icon = "⚠",
+                    title = "Báo cáo sự cố",
+                    modifier = Modifier.fillMaxWidth(), // chiếm toàn hàng
+                    onClick = onOpenIncidentReport // bấm để mở màn báo cáo sự cố
                 )
             }
 

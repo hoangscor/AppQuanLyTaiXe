@@ -1,6 +1,7 @@
 package com.example.busdieuhanhdongnai.navigation
 
 import com.example.busdieuhanhdongnai.feature.driver.qr.QrCheckInScreen // màn quét QR
+import com.example.busdieuhanhdongnai.feature.driver.incident.IncidentReportScreen // màn báo cáo sự cố
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripEntryScreen // màn nhập dữ liệu chuyến
 import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationScreen // màn hình thông báo
 import com.example.busdieuhanhdongnai.feature.driver.schedule.ScheduleScreen // màn hình lịch trình
@@ -33,19 +34,22 @@ fun AppNavGraph() {
 
         composable(Routes.DRIVER_HOME) {
             DriverHomeScreen(
-            onOpenSchedule = {
-                navController.navigate(Routes.SCHEDULE) // mở màn lịch trình
-            },
-            onOpenNotifications = {
-                navController.navigate(Routes.NOTIFICATIONS) // mở màn thông báo
-            },
-            onOpenTripEntry = {
-                navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
-            },
-            onOpenQrCheckIn = {
-                navController.navigate(Routes.QR_CHECKIN) // mở màn quét QR
-            }
-        )
+                onOpenSchedule = {
+                    navController.navigate(Routes.SCHEDULE) // mở màn lịch trình
+                },
+                onOpenNotifications = {
+                    navController.navigate(Routes.NOTIFICATIONS) // mở màn thông báo
+                },
+                onOpenTripEntry = {
+                    navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
+                },
+                onOpenQrCheckIn = {
+                    navController.navigate(Routes.QR_CHECKIN) // mở màn quét QR
+                },
+                onOpenIncidentReport = {
+                    navController.navigate(Routes.INCIDENT_REPORT) // mở màn báo cáo sự cố
+                }
+            )
         }
 
         composable(Routes.SCHEDULE) { // khai báo màn lịch trình
@@ -71,6 +75,13 @@ fun AppNavGraph() {
         }
         composable(Routes.QR_CHECKIN) { // khai báo màn quét QR
             QrCheckInScreen(
+                onBack = {
+                    navController.popBackStack() // quay về trang trước
+                }
+            )
+        }
+        composable(Routes.INCIDENT_REPORT) { // khai báo màn báo cáo sự cố
+            IncidentReportScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
                 }
