@@ -1,5 +1,6 @@
 package com.example.busdieuhanhdongnai.navigation
 
+import com.example.busdieuhanhdongnai.feature.driver.trip.TripEntryScreen // màn nhập dữ liệu chuyến
 import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationScreen // màn hình thông báo
 import com.example.busdieuhanhdongnai.feature.driver.schedule.ScheduleScreen // màn hình lịch trình
 import androidx.compose.runtime.Composable
@@ -36,6 +37,9 @@ fun AppNavGraph() {
                 },
                 onOpenNotifications = {
                     navController.navigate(Routes.NOTIFICATIONS) // mở màn thông báo
+                },
+                onOpenTripEntry = {
+                    navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
                 }
             )
         }
@@ -49,6 +53,13 @@ fun AppNavGraph() {
         }
         composable(Routes.NOTIFICATIONS) { // khai báo màn thông báo
             NotificationScreen(
+                onBack = {
+                    navController.popBackStack() // quay về trang trước
+                }
+            )
+        }
+        composable(Routes.TRIP_ENTRY) { // khai báo màn nhập dữ liệu chuyến
+            TripEntryScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
                 }

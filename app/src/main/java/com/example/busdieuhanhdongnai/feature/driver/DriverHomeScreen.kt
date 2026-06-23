@@ -34,7 +34,8 @@ private val DriverGreen = Color(0xFF1A9B54)
 @Composable
 fun DriverHomeScreen(
     onOpenSchedule: () -> Unit = {}, // mở màn lịch trình
-    onOpenNotifications: () -> Unit = {} // mở màn thông báo
+    onOpenNotifications: () -> Unit = {}, // mở màn thông báo
+    onOpenTripEntry: () -> Unit = {} // mở màn nhập dữ liệu chuyến
 ) {
     Column(
         modifier = Modifier
@@ -144,9 +145,10 @@ fun DriverHomeScreen(
                 )
 
                 DriverMenuCard(
-                    icon = "✎",
+                    icon = "⌁",
                     title = "Nhập dữ liệu\nchuyến",
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenTripEntry // bấm để mở màn nhập dữ liệu
                 )
             }
 
