@@ -3,6 +3,7 @@ package com.example.busdieuhanhdongnai.navigation
 import com.example.busdieuhanhdongnai.feature.driver.qr.QrCheckInScreen // màn quét QR
 import com.example.busdieuhanhdongnai.feature.driver.incident.IncidentReportScreen // màn báo cáo sự cố
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripEntryScreen // màn nhập dữ liệu chuyến
+import com.example.busdieuhanhdongnai.feature.driver.history.TripHistoryScreen // màn nhật ký chuyến xe
 import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationScreen // màn hình thông báo
 import com.example.busdieuhanhdongnai.feature.driver.schedule.ScheduleScreen // màn hình lịch trình
 import androidx.compose.runtime.Composable
@@ -43,11 +44,11 @@ fun AppNavGraph() {
                 onOpenTripEntry = {
                     navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
                 },
-                onOpenQrCheckIn = {
-                    navController.navigate(Routes.QR_CHECKIN) // mở màn quét QR
-                },
                 onOpenIncidentReport = {
                     navController.navigate(Routes.INCIDENT_REPORT) // mở màn báo cáo sự cố
+                },
+                onOpenTripHistory = {
+                    navController.navigate(Routes.TRIP_HISTORY) // mở màn nhật ký chuyến xe
                 }
             )
         }
@@ -82,6 +83,13 @@ fun AppNavGraph() {
         }
         composable(Routes.INCIDENT_REPORT) { // khai báo màn báo cáo sự cố
             IncidentReportScreen(
+                onBack = {
+                    navController.popBackStack() // quay về trang trước
+                }
+            )
+        }
+        composable(Routes.TRIP_HISTORY) { // khai báo màn nhật ký chuyến xe
+            TripHistoryScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
                 }

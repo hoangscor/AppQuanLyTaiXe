@@ -37,7 +37,8 @@ fun DriverHomeScreen(
     onOpenNotifications: () -> Unit = {}, // mở màn thông báo
     onOpenTripEntry: () -> Unit = {}, // mở màn nhập dữ liệu chuyến
     onOpenQrCheckIn: () -> Unit = {}, // mở màn quét QR
-    onOpenIncidentReport: () -> Unit = {} // mở màn báo cáo sự cố
+    onOpenIncidentReport: () -> Unit = {}, // mở màn báo cáo sự cố
+    onOpenTripHistory: () -> Unit = {} // mở màn nhật ký chuyến xe
 ) {
     Column(
         modifier = Modifier
@@ -181,6 +182,14 @@ fun DriverHomeScreen(
                 title = "Báo cáo sự cố",
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onOpenIncidentReport
+            )
+            Spacer(modifier = Modifier.height(12.dp)) // tạo khoảng cách giữa hai nút
+
+            DriverMenuCard(
+                icon = "☷",
+                title = "Nhật ký\nchuyến xe",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onOpenTripHistory // bấm để mở màn nhật ký chuyến xe
             )
 
             Spacer(modifier = Modifier.height(22.dp))
