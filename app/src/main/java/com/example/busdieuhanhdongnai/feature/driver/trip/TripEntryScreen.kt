@@ -41,10 +41,19 @@ fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
     var passengerCount by rememberSaveable { mutableStateOf("") } // số khách nhập vào
     var tripNote by rememberSaveable { mutableStateOf("") } // ghi chú chuyến xe
     var tripStarted by rememberSaveable { mutableStateOf(false) } // trạng thái chuyến xe
+    var tripCompleted by rememberSaveable { mutableStateOf(false) } // đánh dấu chuyến đã hoàn thành
     var resultMessage by rememberSaveable { mutableStateOf("") } // thông báo kết quả
+    val statusText = when { // xác định chữ trạng thái
+        tripCompleted -> "Đã hoàn thành" // chuyến đã kết thúc
+        tripStarted -> "Đang thực hiện" // chuyến đang chạy
+        else -> "Chưa bắt đầu" // chưa bấm bắt đầu
+    }
 
-    val statusText = if (tripStarted) "Đang thực hiện" else "Chưa bắt đầu" // chữ trạng thái
-    val statusColor = if (tripStarted) TripGreen else TripOrange // màu trạng thái
+    val statusColor = when { // xác định màu trạng thái
+        tripCompleted -> TripGreen // màu xanh khi đã hoàn thành
+        tripStarted -> TripGreen // màu xanh khi đang chạy
+        else -> TripOrange // màu cam khi chưa chạy
+    }
 
     Column(
         modifier = Modifier
@@ -178,16 +187,18 @@ fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
 
             Button(
                 onClick = {
-                    if (!tripStarted) {
-                        tripStarted = true // đổi trạng thái sang đang chạy
-                        resultMessage = "Đã bắt đầu chuyến xe lúc 07:00." // báo kết quả
-                    } else if (passengerCount.isBlank()) {
-                        resultMessage = "Vui lòng nhập số lượt khách trước khi kết thúc chuyến." // nhắc thiếu dữ liệu
-                    } else {
-                        tripStarted = false // đổi trạng thái sang hoàn thành
+                    if (!tripStarted && !tripCompleted) { // chỉ bắt đầu khi chuyến chưa kết thúc
+                        tripStarted = true // chuyển sang trạng thái đang chạy
+                        resultMessage = "Đã bắt đầu chuyến xe lúc 07:00." // báo đã bắt đầu
+                    } else if (tripStarted && passengerCount.isBlank()) { // kiểm tra số khách trước khi kết thúc
+                        resultMessage = "Vui lòng nhập số lượt khách trước khi kết thúc chuyến." // nhắc nhập dữ liệu
+                    } else if (tripStarted) { // kết thúc khi chuyến đang chạy
+                        tripStarted = false // dừng trạng thái đang chạy
+                        tripCompleted = true // đánh dấu chuyến đã hoàn thành
                         resultMessage = "Đã lưu dữ liệu chuyến xe thành công." // báo đã lưu
                     }
                 },
+                enabled = !tripCompleted, // khóa nút sau khi chuyến hoàn thành
                 modifier = Modifier
                     .fillMaxWidth() // phủ ngang màn hình
                     .height(52.dp), // chiều cao nút
@@ -197,7 +208,11 @@ fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                 shape = RoundedCornerShape(10.dp) // bo góc nút
             ) {
                 Text(
-                    text = if (tripStarted) "KẾT THÚC CHUYẾN" else "BẮT ĐẦU CHUYẾN", // đổi chữ nút
+                    text = when { // đổi chữ nút theo trạng thái
+                        tripCompleted -> "CHUYẾN ĐÃ HOÀN THÀNH" // chuyến đã xong
+                        tripStarted -> "KẾT THÚC CHUYẾN" // cho phép kết thúc
+                        else -> "BẮT ĐẦU CHUYẾN" // cho phép bắt đầu
+                    },
                     fontWeight = FontWeight.Bold
                 )
             }
