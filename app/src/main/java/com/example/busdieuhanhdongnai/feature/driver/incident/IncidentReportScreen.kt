@@ -1,5 +1,6 @@
 package com.example.busdieuhanhdongnai.feature.driver.incident
 
+import androidx.compose.foundation.layout.size // đặt kích thước ảnh
 import androidx.compose.foundation.background // tô nền giao diện
 import androidx.compose.foundation.clickable // cho phép bấm
 import androidx.compose.foundation.layout.Arrangement // tạo khoảng cách đều
@@ -13,12 +14,15 @@ import androidx.compose.foundation.layout.padding // tạo lề
 import androidx.compose.foundation.rememberScrollState // nhớ vị trí cuộn
 import androidx.compose.foundation.shape.RoundedCornerShape // bo góc
 import androidx.compose.foundation.verticalScroll // cho phép cuộn dọc
+
 import androidx.compose.material3.Button // tạo nút bấm
 import androidx.compose.material3.ButtonDefaults // chỉnh màu nút
 import androidx.compose.material3.Card // tạo thẻ giao diện
 import androidx.compose.material3.CardDefaults // chỉnh màu thẻ
 import androidx.compose.material3.OutlinedTextField // ô nhập dữ liệu
 import androidx.compose.material3.Text // hiển thị chữ
+
+import androidx.compose.runtime.remember // nhớ ảnh khi đang ở màn hình
 import androidx.compose.runtime.Composable // tạo giao diện Compose
 import androidx.compose.runtime.getValue // đọc state
 import androidx.compose.runtime.mutableStateOf // tạo state thay đổi được
@@ -30,6 +34,13 @@ import androidx.compose.ui.graphics.Color // dùng màu
 import androidx.compose.ui.text.font.FontWeight // chỉnh độ đậm chữ
 import androidx.compose.ui.unit.dp // đơn vị khoảng cách
 import androidx.compose.ui.unit.sp // đơn vị cỡ chữ
+import androidx.compose.ui.graphics.asImageBitmap // đổi Bitmap sang ảnh Compose
+import androidx.compose.ui.layout.ContentScale // chỉnh ảnh vừa khung
+
+import android.graphics.Bitmap // lưu ảnh chụp tạm
+import androidx.activity.compose.rememberLauncherForActivityResult // mở camera hệ thống
+import androidx.activity.result.contract.ActivityResultContracts // dùng chức năng chụp ảnh
+import androidx.compose.foundation.Image // hiển thị ảnh
 
 private val IncidentBlue = Color(0xFF0066CC) // màu xanh chính
 private val IncidentBackground = Color(0xFFF6F8FC) // màu nền trang
@@ -48,6 +59,8 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
     var description by rememberSaveable { mutableStateOf("") } // nội dung sự cố
     var resultMessage by rememberSaveable { mutableStateOf("") } // thông báo kết quả
     var isSubmitted by rememberSaveable { mutableStateOf(false) } // đã gửi thành công hay chưa
+    var incidentPhoto by remember { mutableStateOf<Bitmap?>(null) } // lưu ảnh vừa chụp
+    var photoMessage by rememberSaveable { mutableStateOf("") } // thông báo trạng thái ảnh
 
     val incidentOptions = listOf( // danh sách loại sự cố
         IncidentOption("Chậm chuyến", "Xe xuất bến hoặc đến trễ so với kế hoạch."),
@@ -55,6 +68,17 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
         IncidentOption("Sự cố phương tiện", "Xe gặp lỗi kỹ thuật hoặc cần kiểm tra."),
         IncidentOption("Tai nạn / va chạm", "Có va chạm cần báo Trung tâm.")
     )
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview() // mở camera chụp ảnh
+    ) { bitmap ->
+        incidentPhoto = bitmap // nhận ảnh từ camera
+
+        photoMessage = if (bitmap != null) {
+            "Đã đính kèm 1 ảnh sự cố." // chụp thành công
+        } else {
+            "Chưa chụp được ảnh." // người dùng hủy hoặc camera lỗi
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -200,6 +224,67 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                     )
                 }
             }
+            Card(
+                modifier = Modifier.fillMaxWidth(), // phủ ngang màn hình
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White // nền trắng cho thẻ ảnh
+                ),
+                shape = RoundedCornerShape(14.dp) // bo góc thẻ
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp), // lề bên trong
+                    verticalArrangement = Arrangement.spacedBy(12.dp) // khoảng cách các phần
+                ) {
+                    Text(
+                        text = "ẢNH SỰ CỐ",
+                        color = IncidentBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
+
+                    Text(
+                        text = "Chụp ảnh hiện trường để gửi kèm báo cáo.",
+                        color = Color.Gray,
+                        fontSize = 13.sp
+                    )
+
+                    Button(
+                        onClick = {
+                            cameraLauncher.launch(null) // mở camera để chụp ảnh
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth() // nút chiếm toàn chiều ngang
+                            .height(50.dp), // chiều cao nút
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = IncidentBlue // nền nút xanh
+                        ),
+                        shape = RoundedCornerShape(10.dp) // bo góc nút
+                    ) {
+                        Text(
+                            text = "CHỤP ẢNH SỰ CỐ",
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    incidentPhoto?.let { photo ->
+                        Image(
+                            bitmap = photo.asImageBitmap(), // đổi ảnh Bitmap sang ảnh Compose
+                            contentDescription = "Ảnh sự cố đã chụp",
+                            modifier = Modifier.size(220.dp), // kích thước ảnh xem trước
+                            contentScale = ContentScale.Crop // cắt ảnh vừa khung
+                        )
+                    }
+
+                    if (photoMessage.isNotBlank()) {
+                        Text(
+                            text = photoMessage,
+                            color = if (incidentPhoto != null) IncidentGreen else IncidentRed,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {
@@ -207,7 +292,11 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                         resultMessage = "Vui lòng nhập mô tả sự cố rõ hơn." // báo thiếu dữ liệu
                         isSubmitted = false // đánh dấu gửi chưa thành công
                     } else {
-                        resultMessage = "Đã gửi báo cáo \"$selectedType\" đến Trung tâm." // báo gửi thành công
+                        resultMessage = if (incidentPhoto != null) {
+                            "Đã gửi báo cáo \"$selectedType\" kèm ảnh đến Trung tâm." // đã gửi có ảnh
+                        } else {
+                            "Đã gửi báo cáo \"$selectedType\" đến Trung tâm." // gửi không có ảnh
+                        }
                         isSubmitted = true // đánh dấu gửi thành công
                     }
                 },

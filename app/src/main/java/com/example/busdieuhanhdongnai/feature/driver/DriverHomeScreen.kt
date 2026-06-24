@@ -173,13 +173,15 @@ fun DriverHomeScreen(
                     modifier = Modifier.weight(1f),
                     onClick = onOpenNotifications // bấm để mở thông báo
                 )
-                DriverMenuCard(
-                    icon = "⚠",
-                    title = "Báo cáo sự cố",
-                    modifier = Modifier.fillMaxWidth(), // chiếm toàn hàng
-                    onClick = onOpenIncidentReport // bấm để mở màn báo cáo sự cố
-                )
             }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            DriverMenuCard(
+                icon = "⚠",
+                title = "Báo cáo sự cố",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onOpenIncidentReport
+            )
 
             Spacer(modifier = Modifier.height(22.dp))
 
