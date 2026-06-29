@@ -43,7 +43,7 @@ data class TripHistoryItem( // dữ liệu một chuyến xe mẫu
 fun TripHistoryScreen(
     onBack: () -> Unit = {} // nhận lệnh quay lại
 ) {
-    val tripList = listOf( // danh sách chuyến xe mẫu
+    val sampleTripList = listOf( // danh sách chuyến xe mẫu
         TripHistoryItem(
             date = "23/06/2026",
             route = "Tuyến 01: Bến xe A → Bến xe B",
@@ -126,14 +126,14 @@ fun TripHistoryScreen(
             ) {
                 HistorySummaryCard(
                     title = "Đã hoàn thành",
-                    value = "2 chuyến",
+                    value = "${TripHistoryStore.tripList.count { it.status == "Đã hoàn thành" }} chuyến", // tự đếm chuyến xe hoàn thành nhé
                     color = HistoryGreen,
                     modifier = Modifier.weight(1f)
                 )
 
                 HistorySummaryCard(
                     title = "Cần chú ý",
-                    value = "1 chuyến",
+                    value = "${TripHistoryStore.tripList.count { it.status == "Chậm chuyến" }} chuyến", // tự đếm chuyến cần chú ý
                     color = HistoryOrange,
                     modifier = Modifier.weight(1f)
                 )
@@ -150,7 +150,7 @@ fun TripHistoryScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            tripList.forEach { trip -> // hiển thị từng chuyến xe
+            TripHistoryStore.tripList.forEach { trip -> // hiển thị danh sách chuyến xe dùng chung
                 TripHistoryCard(trip = trip)
 
                 Spacer(modifier = Modifier.height(12.dp))

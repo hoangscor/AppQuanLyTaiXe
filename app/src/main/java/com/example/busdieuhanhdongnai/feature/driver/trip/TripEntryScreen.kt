@@ -1,5 +1,6 @@
 package com.example.busdieuhanhdongnai.feature.driver.trip
 
+import com.example.busdieuhanhdongnai.feature.driver.history.TripHistoryStore // lưu chuyến hoàn thành vào nhật ký
 import androidx.compose.foundation.background // tô nền giao diện
 import androidx.compose.foundation.clickable // cho phép bấm
 import androidx.compose.foundation.layout.Arrangement // tạo khoảng cách đều
@@ -195,6 +196,10 @@ fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                     } else if (tripStarted) { // kết thúc khi chuyến đang chạy
                         tripStarted = false // dừng trạng thái đang chạy
                         tripCompleted = true // đánh dấu chuyến đã hoàn thành
+                        TripHistoryStore.addCompletedTrip( // thêm chuyến hoàn thành vào nhật ký
+                            passengers = passengerCount, // lấy số khách đã nhập
+                            note = "" // chưa dùng ghi chú
+                        )
                         resultMessage = "Đã lưu dữ liệu chuyến xe thành công." // báo đã lưu
                     }
                 },

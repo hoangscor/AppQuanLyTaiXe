@@ -44,6 +44,9 @@ fun AppNavGraph() {
                 onOpenTripEntry = {
                     navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
                 },
+                onOpenQrCheckIn = {
+                    navController.navigate(Routes.QR_CHECKIN) // mở màn quét QR hoặc thẻ điện tử
+                },
                 onOpenIncidentReport = {
                     navController.navigate(Routes.INCIDENT_REPORT) // mở màn báo cáo sự cố
                 },
