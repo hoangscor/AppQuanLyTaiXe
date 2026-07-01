@@ -18,6 +18,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState // đọc Flow Room thành state Compose
+import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy ViewModel trong Compose
+import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // ViewModel lưu và đọc chuyến xe
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,34 +46,28 @@ data class TripHistoryItem( // dữ liệu một chuyến xe mẫu
 
 @Composable
 fun TripHistoryScreen(
-    onBack: () -> Unit = {} // nhận lệnh quay lại
+    onBack: () -> Unit = {}, // nhận lệnh quay lại
+    tripViewModel: TripViewModel = viewModel() // lấy ViewModel để đọc Room
 ) {
-    val sampleTripList = listOf( // danh sách chuyến xe mẫu
-        TripHistoryItem(
-            date = "23/06/2026",
-            route = "Tuyến 01: Bến xe A → Bến xe B",
-            time = "07:00 - 08:00",
-            passengers = "35 khách",
-            status = "Đã hoàn thành",
-            statusColor = HistoryGreen
-        ),
-        TripHistoryItem(
-            date = "22/06/2026",
-            route = "Tuyến 01: Bến xe A → Bến xe B",
-            time = "10:00 - 11:00",
-            passengers = "28 khách",
-            status = "Đã hoàn thành",
-            statusColor = HistoryGreen
-        ),
-        TripHistoryItem(
-            date = "21/06/2026",
-            route = "Tuyến 02: Bến xe B → Bến xe C",
-            time = "14:00 - 15:00",
-            passengers = "Chưa cập nhật",
-            status = "Chậm chuyến",
-            statusColor = HistoryOrange
-        )
+    val roomTrips by tripViewModel.allTrips.collectAsState( // theo dõi dữ liệu Room thay đổi
+        initial = emptyList() // lúc Room chưa trả dữ liệu thì dùng danh sách rỗng
     )
+
+    val tripList = roomTrips.map { trip -> // đổi dữ liệu Room sang dữ liệu giao diện
+        TripHistoryItem(
+            date = trip.date, // lấy ngày từ Room
+            route = trip.route, // lấy tuyến từ Room
+            time = trip.time, // lấy thời gian từ Room
+            passengers = "${trip.passengers} khách", // hiển thị số khách
+            status = trip.status, // lấy trạng thái từ Room
+            statusColor = if (trip.status == "Đã hoàn thành") { // chọn màu theo trạng thái
+                HistoryGreen // màu xanh khi hoàn thành
+            } else {
+                HistoryOrange // màu cam cho trạng thái cần chú ý
+            }
+        )
+    }
+
 
     Column(
         modifier = Modifier
@@ -126,14 +125,14 @@ fun TripHistoryScreen(
             ) {
                 HistorySummaryCard(
                     title = "Đã hoàn thành",
-                    value = "${TripHistoryStore.tripList.count { it.status == "Đã hoàn thành" }} chuyến", // tự đếm chuyến xe hoàn thành nhé
+                    value = "${tripList.count { it.status == "Đã hoàn thành" }} chuyến", // tự đếm chuyến xe hoàn thành nhé
                     color = HistoryGreen,
                     modifier = Modifier.weight(1f)
                 )
 
                 HistorySummaryCard(
                     title = "Cần chú ý",
-                    value = "${TripHistoryStore.tripList.count { it.status == "Chậm chuyến" }} chuyến", // tự đếm chuyến cần chú ý
+                    value = "${tripList.count { it.status == "Chậm chuyến" }} chuyến", // tự đếm chuyến cần chú ý
                     color = HistoryOrange,
                     modifier = Modifier.weight(1f)
                 )
@@ -150,7 +149,7 @@ fun TripHistoryScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            TripHistoryStore.tripList.forEach { trip -> // hiển thị danh sách chuyến xe dùng chung
+            tripList.forEach { trip -> // hiển thị danh sách chuyến xe từ Room
                 TripHistoryCard(trip = trip)
 
                 Spacer(modifier = Modifier.height(12.dp))

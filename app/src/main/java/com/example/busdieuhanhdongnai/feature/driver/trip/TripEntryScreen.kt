@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue // đọc state
 import androidx.compose.runtime.mutableStateOf // tạo state thay đổi được
 import androidx.compose.runtime.saveable.rememberSaveable // giữ dữ liệu khi xoay màn hình
 import androidx.compose.runtime.setValue // cập nhật state
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy TripViewModel trong Compose
 import androidx.compose.ui.Alignment // căn chỉnh nội dung
 import androidx.compose.ui.Modifier // chỉnh giao diện
 import androidx.compose.ui.graphics.Color // dùng màu
@@ -38,7 +39,10 @@ private val TripGreen = Color(0xFF1A9B54) // màu trạng thái tốt
 private val TripOrange = Color(0xFFFF9800) // màu cảnh báo
 
 @Composable
-fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
+fun TripEntryScreen(
+    onBack: () -> Unit = {}, // nhận lệnh quay lại
+    tripViewModel: TripViewModel = viewModel() // dùng ViewModel để lưu Room
+) {
     var passengerCount by rememberSaveable { mutableStateOf("") } // số khách nhập vào
     var tripNote by rememberSaveable { mutableStateOf("") } // ghi chú chuyến xe
     var tripStarted by rememberSaveable { mutableStateOf(false) } // trạng thái chuyến xe
@@ -198,7 +202,16 @@ fun TripEntryScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                         tripCompleted = true // đánh dấu chuyến đã hoàn thành
                         TripHistoryStore.addCompletedTrip( // thêm chuyến hoàn thành vào nhật ký
                             passengers = passengerCount, // lấy số khách đã nhập
-                            note = "" // chưa dùng ghi chú
+                            note = tripNote // lưu ghi chú vào nhật ký tạm
+                        )
+
+                        tripViewModel.saveTrip( // lưu chuyến xe thật vào Room
+                            date = "30/06/2026", // ngày thực hiện chuyến xe
+                            route = "Tuyến 01: Bến xe A → Bến xe B", // tên tuyến xe
+                            time = "07:00 - 08:00", // thời gian chạy chuyến xe
+                            passengers = passengerCount, // số lượt khách đã nhập
+                            status = "Đã hoàn thành", // trạng thái khi lưu
+                            note = tripNote // ghi chú hoặc sự cố của chuyến
                         )
                         resultMessage = "Đã lưu dữ liệu chuyến xe thành công." // báo đã lưu
                     }
