@@ -35,13 +35,14 @@ private val HistoryBackground = Color(0xFFF6F8FC) // màu nền màn hình
 private val HistoryGreen = Color(0xFF1A9B54) // màu hoàn thành
 private val HistoryOrange = Color(0xFFFF8A00) // màu cảnh báo
 
-data class TripHistoryItem( // dữ liệu một chuyến xe mẫu
-    val date: String,
-    val route: String,
-    val time: String,
-    val passengers: String,
-    val status: String,
-    val statusColor: Color
+data class TripHistoryItem( // dữ liệu một chuyến xe hiển thị trong nhật ký
+    val date: String, // ngày thực hiện chuyến
+    val route: String, // tên tuyến xe
+    val time: String, // thời gian chạy chuyến
+    val passengers: String, // số lượng hành khách
+    val status: String, // trạng thái chuyến xe
+    val statusColor: Color, // màu hiển thị trạng thái
+    val note: String // ghi chú hoặc sự cố của chuyến
 )
 
 @Composable
@@ -64,7 +65,8 @@ fun TripHistoryScreen(
                 HistoryGreen // màu xanh khi hoàn thành
             } else {
                 HistoryOrange // màu cam cho trạng thái cần chú ý
-            }
+            },
+            note = trip.note // lấy ghi chú từ Room
         )
     }
 
@@ -227,6 +229,7 @@ fun TripHistoryCard(
                 )
             }
 
+
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
@@ -274,6 +277,23 @@ fun TripHistoryCard(
                     text = trip.passengers,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
+                )
+            }
+            if (trip.note.isNotBlank()) { // chỉ hiện phần ghi chú khi chuyến có ghi chú
+                Spacer(modifier = Modifier.height(10.dp)) // tạo khoảng cách với dòng số khách
+
+                Text(
+                    text = "Ghi chú", // nhãn của phần ghi chú
+                    color = Color.Gray, // dùng màu xám cho nhãn phụ
+                    fontSize = 13.sp // dùng cỡ chữ phụ
+                )
+
+                Spacer(modifier = Modifier.height(4.dp)) // tạo khoảng cách nhỏ trước nội dung ghi chú
+
+                Text(
+                    text = trip.note, // hiển thị ghi chú lấy từ Room
+                    fontSize = 13.sp, // dùng cỡ chữ nội dung
+                    fontWeight = FontWeight.Medium // làm nội dung ghi chú dễ đọc hơn
                 )
             }
         }
