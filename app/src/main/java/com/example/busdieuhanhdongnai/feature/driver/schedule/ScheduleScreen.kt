@@ -30,7 +30,10 @@ private val ScheduleGreen = Color(0xFF1A9B54)
 private val ScheduleRed = Color(0xFFE53935)
 
 @Composable
-fun ScheduleScreen(onBack: () -> Unit = {}) {
+fun ScheduleScreen( // hiển thị lịch trình và cho phép chọn chuyến
+    onBack: () -> Unit = {}, // nhận lệnh quay lại màn trước
+    onSelectTrip: (String, String, String) -> Unit = { _, _, _ -> } // gửi tuyến, biển số xe và giờ dự kiến sang màn nhập chuyến
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -138,17 +141,34 @@ fun ScheduleScreen(onBack: () -> Unit = {}) {
             )
 
             ScheduleItem(
-                time = "11:00",
-                title = "Xuất bến",
-                status = "Chưa đến giờ",
-                statusColor = Color.Gray
+                time = "11:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                status = "Chưa đến giờ", // chuyến chưa được thực hiện
+                statusColor = Color.Gray, // dùng màu xám cho trạng thái chờ
+                canSelect = true, // cho phép tài xế bấm chọn chuyến này
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 01: Bến xe A → Bến xe B", // gửi tên tuyến sang màn nhập chuyến
+                        "51B-123.45", // gửi biển số xe sang màn nhập chuyến
+                        "11:00 - 12:00" // gửi khung giờ dự kiến sang màn nhập chuyến
+                    )
+                }
             )
 
             ScheduleItem(
-                time = "12:00",
-                title = "Xuất bến",
-                status = "Chưa đến giờ",
-                statusColor = Color.Gray
+                time = "12:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                routeName = "Tuyến 02", // hiển thị tuyến khác trên lịch trình
+                status = "Chưa đến giờ", // chuyến chưa được thực hiện
+                statusColor = Color.Gray, // màu xám cho trạng thái chờ
+                canSelect = true, // cho phép chọn chuyến này
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 02: Bến xe B → Bến xe C", // gửi tuyến khác sang màn nhập chuyến
+                        "60C-456.78", // gửi biển số xe khác
+                        "12:00 - 13:00" // gửi giờ dự kiến khác
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -157,16 +177,24 @@ fun ScheduleScreen(onBack: () -> Unit = {}) {
 }
 
 @Composable
-fun ScheduleItem(
-    time: String,
-    title: String,
-    status: String,
-    statusColor: Color
+fun ScheduleItem( // hiển thị một chuyến trong lịch trình
+    time: String, // giờ xuất bến dự kiến
+    title: String, // tên hoạt động của chuyến
+    routeName: String = "Tuyến 01", // tên tuyến hiển thị của chuyến
+    status: String, // trạng thái chuyến xe
+    statusColor: Color, // màu hiển thị trạng thái
+    canSelect: Boolean = false, // xác định chuyến này có được phép chọn hay không
+    onSelect: () -> Unit = {} // nhận lệnh khi tài xế chọn chuyến
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp),
+            .fillMaxWidth() // phủ ngang màn hình
+            .padding(bottom = 10.dp) // tạo khoảng cách với thẻ kế tiếp
+            .clickable(
+                enabled = canSelect // chỉ cho bấm khi chuyến được phép chọn
+            ) {
+                onSelect() // báo lại rằng tài xế đã chọn chuyến này
+            },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
@@ -197,7 +225,7 @@ fun ScheduleItem(
                 )
 
                 Text(
-                    text = "Tuyến 01",
+                    text = routeName, // hiển thị đúng tên tuyến của từng chuyến
                     color = Color.Gray,
                     fontSize = 12.sp
                 )

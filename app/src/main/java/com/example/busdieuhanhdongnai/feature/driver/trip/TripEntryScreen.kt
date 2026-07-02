@@ -43,9 +43,12 @@ private val TripGreen = Color(0xFF1A9B54) // màu trạng thái tốt
 private val TripOrange = Color(0xFFFF9800) // màu cảnh báo
 
 @Composable
-fun TripEntryScreen(
-    onBack: () -> Unit = {}, // nhận lệnh quay lại
-    tripViewModel: TripViewModel = viewModel() // dùng ViewModel để lưu Room
+fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe được chọn
+    onBack: () -> Unit = {}, // nhận lệnh quay về màn trước
+    selectedRoute: String = "Tuyến 01: Bến xe A → Bến xe B", // nhận tên tuyến đã chọn từ lịch trình
+    selectedVehiclePlate: String = "51B-123.45", // nhận biển số xe đã chọn từ lịch trình
+    selectedScheduledTime: String = "07:00 - 08:00", // nhận giờ dự kiến đã chọn từ lịch trình
+    tripViewModel: TripViewModel = viewModel() // dùng ViewModel để lưu chuyến vào Room
 ) {
     var passengerCount by rememberSaveable { mutableStateOf("") } // số khách nhập vào
     var tripNote by rememberSaveable { mutableStateOf("") } // ghi chú chuyến xe
@@ -127,17 +130,17 @@ fun TripEntryScreen(
 
                     TripInfoRow(
                         label = "Tuyến",
-                        value = "Tuyến 01: Bến xe A → Bến xe B"
+                        value = selectedRoute // hiển thị tuyến tài xế đã chọn từ lịch trình
                     )
 
                     TripInfoRow(
                         label = "Xe",
-                        value = "51B-123.45"
+                        value = selectedVehiclePlate // hiển thị biển số xe của chuyến đã chọn
                     )
 
                     TripInfoRow(
                         label = "Giờ dự kiến",
-                        value = "07:00 - 08:00"
+                        value = selectedScheduledTime // hiển thị giờ dự kiến của chuyến đã chọn
                     )
 
                     TripInfoRow(
@@ -212,7 +215,7 @@ fun TripEntryScreen(
 
                         tripViewModel.saveTrip( // lưu chuyến xe thật vào Room
                             date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), // lấy ngày hiện tại từ thiết bị
-                            route = "Tuyến 01: Bến xe A → Bến xe B", // tên tuyến xe
+                            route = selectedRoute, // lưu đúng tuyến đã chọn từ lịch trình
                             time = "$tripStartTime - $currentEndTime", // ghép giờ bắt đầu và giờ kết thúc thực tế
                             passengers = passengerCount, // số lượt khách đã nhập
                             status = "Đã hoàn thành", // trạng thái khi lưu

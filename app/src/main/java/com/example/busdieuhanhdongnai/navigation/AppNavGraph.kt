@@ -1,5 +1,10 @@
 package com.example.busdieuhanhdongnai.navigation
 
+import androidx.compose.runtime.getValue // đọc giá trị state
+import androidx.compose.runtime.mutableStateOf // tạo state có thể thay đổi
+import androidx.compose.runtime.saveable.rememberSaveable // giữ dữ liệu khi xoay màn hình
+import androidx.compose.runtime.setValue // cập nhật state
+
 import com.example.busdieuhanhdongnai.feature.driver.qr.QrCheckInScreen // màn quét QR
 import com.example.busdieuhanhdongnai.feature.driver.incident.IncidentReportScreen // màn báo cáo sự cố
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripEntryScreen // màn nhập dữ liệu chuyến
@@ -16,6 +21,9 @@ import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
+    var selectedRoute by rememberSaveable { mutableStateOf("Tuyến 01: Bến xe A → Bến xe B") } // giữ tuyến xe được chọn
+    var selectedVehiclePlate by rememberSaveable { mutableStateOf("51B-123.45") } // giữ biển số xe được chọn
+    var selectedScheduledTime by rememberSaveable { mutableStateOf("07:00 - 08:00") } // giữ giờ dự kiến của chuyến được chọn
 
     NavHost(
         navController = navController,
@@ -60,6 +68,12 @@ fun AppNavGraph() {
             ScheduleScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
+                },
+                onSelectTrip = { route, vehiclePlate, scheduledTime -> // nhận dữ liệu chuyến tài xế vừa chọn
+                    selectedRoute = route // lưu tuyến xe đã chọn
+                    selectedVehiclePlate = vehiclePlate // lưu biển số xe đã chọn
+                    selectedScheduledTime = scheduledTime // lưu giờ dự kiến đã chọn
+                    navController.navigate(Routes.TRIP_ENTRY) // chuyển sang màn nhập dữ liệu chuyến
                 }
             )
         }
@@ -73,8 +87,11 @@ fun AppNavGraph() {
         composable(Routes.TRIP_ENTRY) { // khai báo màn nhập dữ liệu chuyến
             TripEntryScreen(
                 onBack = {
-                    navController.popBackStack() // quay về trang trước
-                }
+                    navController.popBackStack() // quay lại màn trước
+                },
+                selectedRoute = selectedRoute, // truyền tuyến xe đã chọn từ lịch trình
+                selectedVehiclePlate = selectedVehiclePlate, // truyền biển số xe đã chọn từ lịch trình
+                selectedScheduledTime = selectedScheduledTime // truyền giờ dự kiến đã chọn từ lịch trình
             )
         }
         composable(Routes.QR_CHECKIN) { // khai báo màn quét QR
