@@ -216,6 +216,7 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                         tripViewModel.saveTrip( // lưu chuyến xe thật vào Room
                             date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), // lấy ngày hiện tại từ thiết bị
                             route = selectedRoute, // lưu đúng tuyến đã chọn từ lịch trình
+                            vehiclePlate = selectedVehiclePlate, // lưu biển số xe đã chọn vào Room
                             time = "$tripStartTime - $currentEndTime", // ghép giờ bắt đầu và giờ kết thúc thực tế
                             passengers = passengerCount, // số lượt khách đã nhập
                             status = "Đã hoàn thành", // trạng thái khi lưu

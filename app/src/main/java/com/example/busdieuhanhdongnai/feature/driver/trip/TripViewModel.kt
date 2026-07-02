@@ -19,6 +19,7 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
     fun saveTrip( // hàm được giao diện gọi khi hoàn thành chuyến xe
         date: String, // ngày thực hiện chuyến xe
         route: String, // tên tuyến xe
+        vehiclePlate: String, // biển số xe của chuyến được chọn
         time: String, // thời gian chạy chuyến xe
         passengers: String, // số lượt khách
         status: String, // trạng thái chuyến xe
@@ -29,6 +30,7 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
                 TripEntity( // tạo dữ liệu một chuyến xe trước khi lưu
                     date = date, // gán ngày thực hiện
                     route = route, // gán tuyến xe
+                    vehiclePlate = vehiclePlate, // lưu biển số xe vào Room
                     time = time, // gán thời gian
                     passengers = passengers, // gán số khách
                     status = status, // gán trạng thái

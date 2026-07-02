@@ -38,6 +38,7 @@ private val HistoryOrange = Color(0xFFFF8A00) // màu cảnh báo
 data class TripHistoryItem( // dữ liệu một chuyến xe hiển thị trong nhật ký
     val date: String, // ngày thực hiện chuyến
     val route: String, // tên tuyến xe
+    val vehiclePlate: String, // biển số xe thực hiện chuyến
     val time: String, // thời gian chạy chuyến
     val passengers: String, // số lượng hành khách
     val status: String, // trạng thái chuyến xe
@@ -58,6 +59,7 @@ fun TripHistoryScreen(
         TripHistoryItem(
             date = trip.date, // lấy ngày từ Room
             route = trip.route, // lấy tuyến từ Room
+            vehiclePlate = trip.vehiclePlate, // lấy biển số xe từ Room
             time = trip.time, // lấy thời gian từ Room
             passengers = "${trip.passengers} khách", // hiển thị số khách
             status = trip.status, // lấy trạng thái từ Room
@@ -237,7 +239,15 @@ fun TripHistoryCard(
                 fontWeight = FontWeight.Medium,
                 fontSize = 15.sp
             )
+            if (trip.vehiclePlate.isNotBlank()) { // chỉ hiện biển số với chuyến có dữ liệu xe
+                Spacer(modifier = Modifier.height(6.dp)) // tạo khoảng cách với tên tuyến
 
+                Text(
+                    text = "Xe: ${trip.vehiclePlate}", // hiển thị biển số xe đã lưu trong Room
+                    color = Color.Gray, // dùng màu phụ cho thông tin xe
+                    fontSize = 13.sp // dùng cỡ chữ phụ
+                )
+            }
             Spacer(modifier = Modifier.height(10.dp))
 
             Divider()

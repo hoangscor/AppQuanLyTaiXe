@@ -10,6 +10,7 @@ data class TripEntity( // tạo cấu trúc dữ liệu một chuyến xe
     val id: Int = 0, // mã định danh của chuyến xe
     val date: String, // ngày thực hiện chuyến xe
     val route: String, // tên tuyến xe
+    val vehiclePlate: String = "", // biển số xe thực hiện chuyến
     val time: String, // thời gian chạy chuyến xe
     val passengers: String, // số lượng khách của chuyến xe
     val status: String, // trạng thái như Đã hoàn thành hoặc Chậm chuyến
