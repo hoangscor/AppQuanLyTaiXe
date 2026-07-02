@@ -33,6 +33,10 @@ import androidx.compose.ui.text.font.FontWeight // chỉnh độ đậm chữ
 import androidx.compose.ui.unit.dp // đơn vị khoảng cách
 import androidx.compose.ui.unit.sp // đơn vị cỡ chữ
 
+import java.time.LocalDate // lấy ngày hiện tại từ thiết bị
+import java.time.LocalTime // lấy giờ hiện tại từ thiết bị
+import java.time.format.DateTimeFormatter // định dạng ngày để hiển thị
+
 private val TripBlue = Color(0xFF0066CC) // màu xanh chính
 private val TripBackground = Color(0xFFF6F8FC) // màu nền trang
 private val TripGreen = Color(0xFF1A9B54) // màu trạng thái tốt
@@ -48,6 +52,7 @@ fun TripEntryScreen(
     var tripStarted by rememberSaveable { mutableStateOf(false) } // trạng thái chuyến xe
     var tripCompleted by rememberSaveable { mutableStateOf(false) } // đánh dấu chuyến đã hoàn thành
     var resultMessage by rememberSaveable { mutableStateOf("") } // thông báo kết quả
+    var tripStartTime by rememberSaveable { mutableStateOf("") } // lưu giờ bắt đầu chuyến thực tế
     val statusText = when { // xác định chữ trạng thái
         tripCompleted -> "Đã hoàn thành" // chuyến đã kết thúc
         tripStarted -> "Đang thực hiện" // chuyến đang chạy
@@ -193,19 +198,22 @@ fun TripEntryScreen(
             Button(
                 onClick = {
                     if (!tripStarted && !tripCompleted) { // chỉ bắt đầu khi chuyến chưa kết thúc
+                        val currentStartTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) // lấy giờ bắt đầu hiện tại
                         tripStarted = true // chuyển sang trạng thái đang chạy
-                        resultMessage = "Đã bắt đầu chuyến xe lúc 07:00." // báo đã bắt đầu
+                        tripStartTime = currentStartTime // lưu giờ bắt đầu thực tế
+                        resultMessage = "Đã bắt đầu chuyến xe lúc $currentStartTime." // báo đã bắt đầu với giờ thực tế
                     } else if (tripStarted && passengerCount.isBlank()) { // kiểm tra số khách trước khi kết thúc
                         resultMessage = "Vui lòng nhập số lượt khách trước khi kết thúc chuyến." // nhắc nhập dữ liệu
                     } else if (tripStarted) { // kết thúc khi chuyến đang chạy
+                        val currentEndTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) // lấy giờ kết thúc hiện tại
                         tripStarted = false // dừng trạng thái đang chạy
                         tripCompleted = true // đánh dấu chuyến đã hoàn thành
 
 
                         tripViewModel.saveTrip( // lưu chuyến xe thật vào Room
-                            date = "30/06/2026", // ngày thực hiện chuyến xe
+                            date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), // lấy ngày hiện tại từ thiết bị
                             route = "Tuyến 01: Bến xe A → Bến xe B", // tên tuyến xe
-                            time = "07:00 - 08:00", // thời gian chạy chuyến xe
+                            time = "$tripStartTime - $currentEndTime", // ghép giờ bắt đầu và giờ kết thúc thực tế
                             passengers = passengerCount, // số lượt khách đã nhập
                             status = "Đã hoàn thành", // trạng thái khi lưu
                             note = tripNote // ghi chú hoặc sự cố của chuyến
