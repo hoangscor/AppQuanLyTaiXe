@@ -16,10 +16,11 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
 
     val allTrips = repository.allTrips // cung cấp danh sách lịch sử chuyến xe cho giao diện
 
-    fun saveTrip( // hàm được giao diện gọi khi hoàn thành chuyến xe
+    fun saveTrip(
         date: String, // ngày thực hiện chuyến xe
         route: String, // tên tuyến xe
         vehiclePlate: String, // biển số xe của chuyến được chọn
+        scheduledTime: String, // khung giờ dự kiến được chọn từ lịch trình
         time: String, // thời gian chạy chuyến xe
         passengers: String, // số lượt khách
         status: String, // trạng thái chuyến xe
@@ -31,6 +32,7 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
                     date = date, // gán ngày thực hiện
                     route = route, // gán tuyến xe
                     vehiclePlate = vehiclePlate, // lưu biển số xe vào Room
+                    scheduledTime = scheduledTime, // lưu khung giờ dự kiến vào Room
                     time = time, // gán thời gian
                     passengers = passengers, // gán số khách
                     status = status, // gán trạng thái

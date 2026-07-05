@@ -23,6 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.collectAsState // đọc Flow dữ liệu Room thành state Compose
+import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy TripViewModel trong Compose
+import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // dùng ViewModel để đọc chuyến đã lưu
 
 private val ScheduleBlue = Color(0xFF0066CC)
 private val ScheduleBackground = Color(0xFFF6F8FC)
@@ -30,10 +34,23 @@ private val ScheduleGreen = Color(0xFF1A9B54)
 private val ScheduleRed = Color(0xFFE53935)
 
 @Composable
-fun ScheduleScreen( // hiển thị lịch trình và cho phép chọn chuyến
+fun ScheduleScreen( // hiển thị lịch trình và cho phép tài xế chọn chuyến
     onBack: () -> Unit = {}, // nhận lệnh quay lại màn trước
-    onSelectTrip: (String, String, String) -> Unit = { _, _, _ -> } // gửi tuyến, biển số xe và giờ dự kiến sang màn nhập chuyến
+    onSelectTrip: (String, String, String) -> Unit = { _, _, _ -> }, // gửi tuyến, biển số xe và giờ dự kiến
+    tripViewModel: TripViewModel = viewModel() // đọc các chuyến đã lưu từ Room
 ) {
+    val roomTrips by tripViewModel.allTrips.collectAsState(
+        initial = emptyList()
+    ) // theo dõi danh sách chuyến Room thay đổi
+
+    val completedScheduledTimes = roomTrips
+        .filter { it.status == "Đã hoàn thành" } // chỉ lấy các chuyến đã hoàn thành
+        .map { it.scheduledTime } // lấy khung giờ dự kiến của từng chuyến
+        .toSet() // loại bỏ các giờ bị trùng
+    val isTrip11Completed = "11:00 - 12:00" in completedScheduledTimes // kiểm tra chuyến 11 giờ đã hoàn thành hay chưa
+
+    val isTrip12Completed = "12:00 - 13:00" in completedScheduledTimes // kiểm tra chuyến 12 giờ đã hoàn thành hay chưa
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -143,9 +160,9 @@ fun ScheduleScreen( // hiển thị lịch trình và cho phép chọn chuyến
             ScheduleItem(
                 time = "11:00", // giờ xuất bến dự kiến
                 title = "Xuất bến", // tên hoạt động của chuyến
-                status = "Chưa đến giờ", // chuyến chưa được thực hiện
-                statusColor = Color.Gray, // dùng màu xám cho trạng thái chờ
-                canSelect = true, // cho phép tài xế bấm chọn chuyến này
+                status = if (isTrip11Completed) "Đã thực hiện" else "Chưa đến giờ", // đổi trạng thái theo dữ liệu Room
+                statusColor = if (isTrip11Completed) ScheduleGreen else Color.Gray, // đổi màu xanh khi đã hoàn thành
+                canSelect = !isTrip11Completed, // khóa không cho chọn lại chuyến đã hoàn thành
                 onSelect = {
                     onSelectTrip(
                         "Tuyến 01: Bến xe A → Bến xe B", // gửi tên tuyến sang màn nhập chuyến
@@ -159,9 +176,9 @@ fun ScheduleScreen( // hiển thị lịch trình và cho phép chọn chuyến
                 time = "12:00", // giờ xuất bến dự kiến
                 title = "Xuất bến", // tên hoạt động của chuyến
                 routeName = "Tuyến 02", // hiển thị tuyến khác trên lịch trình
-                status = "Chưa đến giờ", // chuyến chưa được thực hiện
-                statusColor = Color.Gray, // màu xám cho trạng thái chờ
-                canSelect = true, // cho phép chọn chuyến này
+                status = if (isTrip12Completed) "Đã thực hiện" else "Chưa đến giờ", // đổi trạng thái theo dữ liệu Room
+                statusColor = if (isTrip12Completed) ScheduleGreen else Color.Gray, // đổi màu xanh khi đã hoàn thành
+                canSelect = !isTrip12Completed, // khóa không cho chọn lại chuyến đã hoàn thành
                 onSelect = {
                     onSelectTrip(
                         "Tuyến 02: Bến xe B → Bến xe C", // gửi tuyến khác sang màn nhập chuyến

@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase // thao tác SQL trực tiếp t
 
 @Database( // khai báo cấu hình database
     entities = [TripEntity::class], // bảng trips được Room quản lý
-    version = 2, // phiên bản có thêm cột biển số xe
+    version = 3, // phiên bản có thêm khung giờ dự kiến của chuyến
     exportSchema = false // chưa xuất file schema ở giai đoạn này
 )
 abstract class AppDatabase : RoomDatabase() { // database chính của ứng dụng
@@ -25,6 +25,14 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) { // chuyển database từ version 2 sang version 3
+            override fun migrate(db: SupportSQLiteDatabase) { // chạy khi app đã có database version 2
+                db.execSQL(
+                    "ALTER TABLE trips ADD COLUMN scheduledTime TEXT NOT NULL DEFAULT ''"
+                ) // thêm cột giờ dự kiến, dữ liệu cũ để trống
+            }
+        }
+
         @Volatile // giúp các luồng đọc đúng dữ liệu mới nhất
         private var INSTANCE: AppDatabase? = null // biến lưu database đang dùng
 
@@ -34,7 +42,7 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                     context.applicationContext, // dùng Context của toàn app
                     AppDatabase::class.java, // chỉ định lớp database này
                     "bus_dieu_hanh_database" // tên file database lưu trong máy
-                ).addMigrations(MIGRATION_1_2) // áp dụng migration giữ dữ liệu chuyến cũ
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3) // áp dụng toàn bộ migration giữ dữ liệu cũ
                     .build() // hoàn tất tạo database
 
                 INSTANCE = instance // lưu lại để lần sau dùng tiếp

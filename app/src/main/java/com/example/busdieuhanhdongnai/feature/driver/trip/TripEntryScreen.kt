@@ -217,6 +217,7 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                             date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), // lấy ngày hiện tại từ thiết bị
                             route = selectedRoute, // lưu đúng tuyến đã chọn từ lịch trình
                             vehiclePlate = selectedVehiclePlate, // lưu biển số xe đã chọn vào Room
+                            scheduledTime = selectedScheduledTime, // lưu khung giờ dự kiến của chuyến đã chọn
                             time = "$tripStartTime - $currentEndTime", // ghép giờ bắt đầu và giờ kết thúc thực tế
                             passengers = passengerCount, // số lượt khách đã nhập
                             status = "Đã hoàn thành", // trạng thái khi lưu
