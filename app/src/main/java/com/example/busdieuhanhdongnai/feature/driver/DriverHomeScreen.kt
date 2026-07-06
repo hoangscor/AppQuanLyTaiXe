@@ -282,6 +282,7 @@ fun DriverHomeScreen(
                     icon = "⌁",
                     title = "Nhập dữ liệu\nchuyến",
                     modifier = Modifier.weight(1f),
+                    enabled = nextScheduledTrip != null, // chỉ cho bấm khi vẫn còn chuyến chưa hoàn thành
                     onClick = {
                         nextScheduledTrip?.let { scheduledTrip -> // chỉ mở khi còn chuyến chưa hoàn thành
                             onOpenNextTrip(
@@ -375,44 +376,60 @@ fun DriverHomeScreen(
         }
     }
 }
-
 @Composable
 fun DriverMenuCard(
-    icon: String,
-    title: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    icon: String, // biểu tượng của chức năng
+    title: String, // tên chức năng
+    modifier: Modifier = Modifier, // modifier truyền từ bên ngoài
+    enabled: Boolean = true, // xác định thẻ có được bấm hay không
+    onClick: () -> Unit = {} // hành động khi tài xế bấm thẻ
 ) {
+    val cardBackgroundColor = if (enabled) { // chọn màu nền theo trạng thái thẻ
+        Color.White // nền trắng khi có thể sử dụng
+    } else {
+        Color(0xFFF0F2F5) // nền xám nhạt khi bị khóa
+    }
+
+    val contentColor = if (enabled) { // chọn màu chữ và biểu tượng theo trạng thái
+        DriverBlue // màu xanh khi có thể sử dụng
+    } else {
+        Color.Gray // màu xám khi bị khóa
+    }
+
     Card(
         modifier = modifier
-            .height(112.dp)
-            .clickable { onClick() },
+            .height(112.dp) // giữ chiều cao thẻ chức năng
+            .clickable(
+                enabled = enabled // chặn thao tác bấm khi thẻ bị khóa
+            ) {
+                onClick() // chạy hành động khi thẻ đang được phép bấm
+            },
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = cardBackgroundColor // dùng màu nền theo trạng thái
         ),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(14.dp) // bo góc thẻ
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .fillMaxSize() // phủ toàn bộ thẻ
+                .padding(12.dp), // tạo khoảng cách nội dung
+            horizontalAlignment = Alignment.CenterHorizontally, // căn giữa ngang
+            verticalArrangement = Arrangement.Center // căn giữa dọc
         ) {
             Text(
-                text = icon,
-                fontSize = 28.sp,
-                color = DriverBlue
+                text = icon, // hiển thị biểu tượng
+                fontSize = 28.sp, // cỡ biểu tượng
+                color = contentColor // đổi màu theo trạng thái
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // khoảng cách biểu tượng và chữ
 
             Text(
-                text = title,
-                color = DriverBlue,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
+                text = title, // hiển thị tên chức năng
+                color = contentColor, // đổi màu theo trạng thái
+                textAlign = TextAlign.Center, // căn giữa chữ
+                fontWeight = FontWeight.Bold, // in đậm chữ
+                fontSize = 13.sp // cỡ chữ
             )
         }
     }
