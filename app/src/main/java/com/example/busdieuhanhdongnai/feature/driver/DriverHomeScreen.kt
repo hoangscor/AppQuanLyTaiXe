@@ -282,7 +282,15 @@ fun DriverHomeScreen(
                     icon = "⌁",
                     title = "Nhập dữ liệu\nchuyến",
                     modifier = Modifier.weight(1f),
-                    onClick = onOpenTripEntry // bấm để mở màn nhập dữ liệu
+                    onClick = {
+                        nextScheduledTrip?.let { scheduledTrip -> // chỉ mở khi còn chuyến chưa hoàn thành
+                            onOpenNextTrip(
+                                nextTripRouteForEntry, // gửi đúng tuyến kế tiếp
+                                nextTripVehiclePlate, // gửi đúng biển số xe
+                                scheduledTrip.scheduledTime // gửi đúng giờ dự kiến
+                            )
+                        }
+                    }
                 )
             }
 
