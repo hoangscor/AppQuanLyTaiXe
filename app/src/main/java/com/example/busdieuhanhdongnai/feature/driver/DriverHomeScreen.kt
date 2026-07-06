@@ -32,11 +32,17 @@ import androidx.compose.runtime.getValue // cho phép đọc state bằng từ k
 import androidx.lifecycle.viewmodel.compose.viewModel // lấy ViewModel trong Compose
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // dùng ViewModel đọc lịch sử chuyến
 import java.time.LocalDate // lấy ngày hiện tại của thiết bị
+import java.time.LocalTime // lấy giờ hiện tại để xác định chuyến tiếp theo
+import java.time.Duration // tính số phút còn lại đến giờ xuất bến
 import java.time.format.DateTimeFormatter // định dạng ngày giống dữ liệu Room
 private val DriverBlue = Color(0xFF0066CC)
 private val DriverBackground = Color(0xFFF6F8FC)
 private val DriverGreen = Color(0xFF1A9B54)
-
+private data class HomeScheduleTrip( // dữ liệu một chuyến hiển thị ở trang chủ
+    val routeName: String, // tên tuyến ngắn hiển thị trên thẻ
+    val routeDetail: String, // điểm đầu và điểm cuối của tuyến
+    val scheduledTime: String // khung giờ dự kiến của chuyến
+)
 @Composable
 fun DriverHomeScreen(
     onOpenSchedule: () -> Unit = {}, // mở màn lịch trình
@@ -68,6 +74,79 @@ fun DriverHomeScreen(
     val totalPassengersToday = completedTripsToday.sumOf { trip -> // cộng số khách của các chuyến đã hoàn thành
         trip.passengers.toIntOrNull() ?: 0 // đổi chuỗi số khách thành số nguyên, lỗi thì dùng 0
     }
+    val currentTime = LocalTime.now() // lấy giờ hiện tại để tìm chuyến kế tiếp
+
+    val completedScheduledTimesToday = completedTripsToday // lấy các chuyến hoàn thành trong hôm nay
+        .map { trip -> trip.scheduledTime } // lấy khung giờ dự kiến của từng chuyến
+        .toSet() // loại bỏ các khung giờ bị trùng
+
+    val dailySchedule = listOf( // khai báo lịch trình dự kiến trong ngày
+        HomeScheduleTrip( // chuyến 07 giờ
+            routeName = "TUYẾN 01", // tên tuyến hiển thị
+            routeDetail = "BẾN XE A  →  BẾN XE B", // hành trình chuyến
+            scheduledTime = "07:00 - 08:00" // khung giờ dự kiến
+        ),
+        HomeScheduleTrip( // chuyến 08 giờ
+            routeName = "TUYẾN 01", // tên tuyến hiển thị
+            routeDetail = "BẾN XE A  →  BẾN XE B", // hành trình chuyến
+            scheduledTime = "08:00 - 09:00" // khung giờ dự kiến
+        ),
+        HomeScheduleTrip( // chuyến 09 giờ
+            routeName = "TUYẾN 01", // tên tuyến hiển thị
+            routeDetail = "BẾN XE A  →  BẾN XE B", // hành trình chuyến
+            scheduledTime = "09:00 - 10:00" // khung giờ dự kiến
+        ),
+        HomeScheduleTrip( // chuyến 10 giờ
+            routeName = "TUYẾN 01", // tên tuyến hiển thị
+            routeDetail = "BẾN XE A  →  BẾN XE B", // hành trình chuyến
+            scheduledTime = "10:00 - 11:00" // khung giờ dự kiến
+        ),
+        HomeScheduleTrip( // chuyến 11 giờ
+            routeName = "TUYẾN 01", // tên tuyến hiển thị
+            routeDetail = "BẾN XE A  →  BẾN XE B", // hành trình chuyến
+            scheduledTime = "11:00 - 12:00" // khung giờ dự kiến
+        ),
+        HomeScheduleTrip( // chuyến 12 giờ
+            routeName = "TUYẾN 02", // tên tuyến hiển thị
+            routeDetail = "BẾN XE B  →  BẾN XE C", // hành trình chuyến
+            scheduledTime = "12:00 - 13:00" // khung giờ dự kiến
+        )
+    )
+
+    val pendingScheduledTrips = dailySchedule.filter { scheduledTrip -> // chỉ lấy chuyến chưa hoàn thành
+        scheduledTrip.scheduledTime !in completedScheduledTimesToday // loại chuyến đã hoàn thành hôm nay
+    }
+
+    val nextScheduledTrip = pendingScheduledTrips.firstOrNull { scheduledTrip -> // tìm chuyến chưa đến giờ gần nhất
+        val departureTime = LocalTime.parse( // lấy giờ xuất bến từ khung giờ
+            scheduledTrip.scheduledTime.substringBefore(" - ") // ví dụ lấy 08:00 từ 08:00 - 09:00
+        )
+
+        !currentTime.isAfter(departureTime) // chọn chuyến có giờ xuất bến từ hiện tại trở đi
+    } ?: pendingScheduledTrips.firstOrNull() // nếu mọi chuyến còn lại đều trễ thì lấy chuyến trễ đầu tiên
+    val nextTripRouteName = nextScheduledTrip?.routeName ?: "HOÀN THÀNH TẤT CẢ" // tên tuyến của chuyến kế tiếp hoặc thông báo hết chuyến
+
+    val nextTripRouteDetail = nextScheduledTrip?.routeDetail ?: "Không còn chuyến nào trong ngày" // hành trình của chuyến kế tiếp hoặc thông báo thay thế
+
+    val nextTripDepartureTime = nextScheduledTrip?.scheduledTime
+        ?.substringBefore(" - ") ?: "--:--" // lấy giờ xuất bến, ví dụ 08:00
+
+    val nextTripMessage = nextScheduledTrip?.let { scheduledTrip -> // tạo thông báo thời gian cho chuyến kế tiếp
+        val departureTime = LocalTime.parse( // đổi giờ xuất bến từ chuỗi sang LocalTime
+            scheduledTrip.scheduledTime.substringBefore(" - ") // lấy giờ đầu của khung lịch
+        )
+
+        val minutesUntilDeparture = Duration.between( // tính số phút từ hiện tại đến giờ xuất bến
+            currentTime, // giờ hiện tại của thiết bị
+            departureTime // giờ xuất bến của chuyến kế tiếp
+        ).toMinutes() // đổi khoảng thời gian sang số phút
+
+        when {
+            minutesUntilDeparture > 0 -> "Còn $minutesUntilDeparture phút nữa đến giờ xuất bến" // chuyến chưa tới giờ
+            minutesUntilDeparture == 0L -> "Đến giờ xuất bến" // đúng giờ xuất bến
+            else -> "Đã trễ ${-minutesUntilDeparture} phút so với giờ xuất bến" // chuyến đang trễ
+        }
+    } ?: "Đã hoàn thành tất cả chuyến hôm nay" // hiển thị khi không còn chuyến chưa hoàn thành
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,7 +197,7 @@ fun DriverHomeScreen(
                     modifier = Modifier.padding(18.dp)
                 ) {
                     Text(
-                        text = "TUYẾN 01",
+                        text = nextTripRouteName, // hiển thị tuyến của chuyến gần nhất chưa hoàn thành
                         color = DriverBlue,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -127,7 +206,7 @@ fun DriverHomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "BẾN XE A  →  BẾN XE B",
+                        text = nextTripRouteDetail, // hiển thị điểm đi và điểm đến của chuyến kế tiếp
                         fontWeight = FontWeight.Medium
                     )
 
@@ -139,7 +218,7 @@ fun DriverHomeScreen(
                     ) {
                         Text(text = "Giờ xuất bến dự kiến")
                         Text(
-                            text = "07:00",
+                            text = nextTripDepartureTime, // hiển thị giờ xuất bến của chuyến kế tiếp
                             color = DriverGreen,
                             fontWeight = FontWeight.Bold
                         )
@@ -148,7 +227,7 @@ fun DriverHomeScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Còn 12 phút nữa đến giờ xuất bến",
+                        text = nextTripMessage, // hiển thị còn bao lâu hoặc đang trễ bao nhiêu phút
                         color = DriverBlue,
                         fontSize = 13.sp
                     )
