@@ -27,7 +27,9 @@ import androidx.compose.runtime.collectAsState // đọc Flow dữ liệu Room t
 import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
 import androidx.lifecycle.viewmodel.compose.viewModel // lấy TripViewModel trong Compose
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // dùng ViewModel để đọc chuyến đã lưu
-
+import java.time.LocalDate // lấy ngày hiện tại từ thiết bị
+import java.time.format.DateTimeFormatter // định dạng ngày để lưu và hiển thị
+import java.util.Locale // dùng tiếng Việt khi hiển thị thứ trong tuần
 private val ScheduleBlue = Color(0xFF0066CC)
 private val ScheduleBackground = Color(0xFFF6F8FC)
 private val ScheduleGreen = Color(0xFF1A9B54)
@@ -42,9 +44,21 @@ fun ScheduleScreen( // hiển thị lịch trình và cho phép tài xế chọn
     val roomTrips by tripViewModel.allTrips.collectAsState(
         initial = emptyList()
     ) // theo dõi danh sách chuyến Room thay đổi
+    val today = LocalDate.now() // lấy ngày hiện tại của thiết bị
+
+    val todayDatabaseFormat = today.format(
+        DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    ) // định dạng ngày giống dữ liệu đang lưu trong Room
+
+    val todayDisplayFormat = today.format(
+        DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", Locale("vi", "VN"))
+    ) // định dạng ngày để hiển thị trên giao diện
 
     val completedScheduledTimes = roomTrips
-        .filter { it.status == "Đã hoàn thành" } // chỉ lấy các chuyến đã hoàn thành
+        .filter {
+            it.status == "Đã hoàn thành" && // chỉ lấy chuyến đã hoàn thành
+                    it.date == todayDatabaseFormat // chỉ lấy chuyến được lưu trong hôm nay
+        }
         .map { it.scheduledTime } // lấy khung giờ dự kiến của từng chuyến
         .toSet() // loại bỏ các giờ bị trùng
     val isTrip11Completed = "11:00 - 12:00" in completedScheduledTimes // kiểm tra chuyến 11 giờ đã hoàn thành hay chưa
@@ -82,7 +96,7 @@ fun ScheduleScreen( // hiển thị lịch trình và cho phép tài xế chọn
                 )
 
                 Text(
-                    text = "Thứ Hai, 23/05/2024",
+                    text = todayDisplayFormat, // hiển thị thứ và ngày thực tế của thiết bị
                     color = Color.White,
                     fontSize = 13.sp
                 )
