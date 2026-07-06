@@ -219,31 +219,66 @@ fun ScheduleScreen( // hiển thị lịch trình và cho phép tài xế chọn
             Spacer(modifier = Modifier.height(12.dp))
 
             ScheduleItem(
-                time = "07:00",
-                title = "Xuất bến",
-                status = trip07Status.text, // lấy trạng thái tự tính cho chuyến 07 giờ
-                statusColor = trip07Status.color // lấy màu trạng thái tự tính
+                time = "07:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                routeName = "Tuyến 01", // tên tuyến hiển thị trên lịch
+                status = trip07Status.text, // lấy trạng thái tự tính của chuyến 07 giờ
+                statusColor = trip07Status.color, // lấy màu trạng thái tự tính
+                canSelect = trip07Status.canSelect, // chỉ cho chọn khi chuyến chưa hoàn thành
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 01: Bến xe A → Bến xe B", // gửi tuyến đã chọn sang màn nhập chuyến
+                        "51B-123.45", // gửi biển số xe của chuyến
+                        "07:00 - 08:00" // gửi khung giờ dự kiến của chuyến
+                    )
+                }
             )
 
             ScheduleItem(
-                time = "08:00",
-                title = "Xuất bến",
-                status = trip08Status.text, // lấy trạng thái tự tính cho chuyến 08 giờ
-                statusColor = trip08Status.color // lấy màu trạng thái tự tính
+                time = "08:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                routeName = "Tuyến 01", // tên tuyến hiển thị trên lịch
+                status = trip08Status.text, // lấy trạng thái tự tính của chuyến 08 giờ
+                statusColor = trip08Status.color, // lấy màu trạng thái tự tính
+                canSelect = trip08Status.canSelect, // chỉ cho chọn khi chuyến chưa hoàn thành
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 01: Bến xe A → Bến xe B", // gửi tuyến đã chọn sang màn nhập chuyến
+                        "51B-123.45", // gửi biển số xe của chuyến
+                        "08:00 - 09:00" // gửi khung giờ dự kiến của chuyến
+                    )
+                }
+            )
+            ScheduleItem(
+                time = "09:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                routeName = "Tuyến 01", // tên tuyến hiển thị trên lịch
+                status = trip09Status.text, // lấy trạng thái tự tính của chuyến 09 giờ
+                statusColor = trip09Status.color, // lấy màu trạng thái tự tính
+                canSelect = trip09Status.canSelect, // chỉ cho chọn khi chuyến chưa hoàn thành
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 01: Bến xe A → Bến xe B", // gửi tuyến đã chọn sang màn nhập chuyến
+                        "51B-123.45", // gửi biển số xe của chuyến
+                        "09:00 - 10:00" // gửi khung giờ dự kiến của chuyến
+                    )
+                }
             )
 
             ScheduleItem(
-                time = "09:00",
-                title = "Xuất bến",
-                status = trip09Status.text, // lấy trạng thái tự tính cho chuyến 09 giờ
-                statusColor = trip09Status.color // lấy màu trạng thái tự tính
-            )
-
-            ScheduleItem(
-                time = "10:00",
-                title = "Xuất bến",
-                status = trip10Status.text, // lấy trạng thái tự tính cho chuyến 10 giờ
-                statusColor = trip10Status.color // lấy màu trạng thái tự tính
+                time = "10:00", // giờ xuất bến dự kiến
+                title = "Xuất bến", // tên hoạt động của chuyến
+                routeName = "Tuyến 01", // tên tuyến hiển thị trên lịch
+                status = trip10Status.text, // lấy trạng thái tự tính của chuyến 10 giờ
+                statusColor = trip10Status.color, // lấy màu trạng thái tự tính
+                canSelect = trip10Status.canSelect, // chỉ cho chọn khi chuyến chưa hoàn thành
+                onSelect = {
+                    onSelectTrip(
+                        "Tuyến 01: Bến xe A → Bến xe B", // gửi tuyến đã chọn sang màn nhập chuyến
+                        "51B-123.45", // gửi biển số xe của chuyến
+                        "10:00 - 11:00" // gửi khung giờ dự kiến của chuyến
+                    )
+                }
             )
 
             ScheduleItem(
