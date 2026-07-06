@@ -27,6 +27,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.collectAsState // theo dõi Flow dữ liệu Room trong Compose
+import androidx.compose.runtime.getValue // cho phép đọc state bằng từ khóa by
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy ViewModel trong Compose
+import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // dùng ViewModel đọc lịch sử chuyến
+import java.time.LocalDate // lấy ngày hiện tại của thiết bị
+import java.time.format.DateTimeFormatter // định dạng ngày giống dữ liệu Room
 private val DriverBlue = Color(0xFF0066CC)
 private val DriverBackground = Color(0xFFF6F8FC)
 private val DriverGreen = Color(0xFF1A9B54)
@@ -38,8 +44,30 @@ fun DriverHomeScreen(
     onOpenTripEntry: () -> Unit = {}, // mở màn nhập dữ liệu chuyến
     onOpenQrCheckIn: () -> Unit = {}, // mở màn quét QR
     onOpenIncidentReport: () -> Unit = {}, // mở màn báo cáo sự cố
-    onOpenTripHistory: () -> Unit = {} // mở màn nhật ký chuyến xe
+    onOpenTripHistory: () -> Unit = {}, // mở màn nhật ký chuyến xe
+    tripViewModel: TripViewModel = viewModel() // lấy dữ liệu chuyến xe từ Room
 ) {
+    val roomTrips by tripViewModel.allTrips.collectAsState( // theo dõi danh sách chuyến từ Room
+        initial = emptyList() // dùng danh sách rỗng khi Room chưa trả dữ liệu
+    )
+
+    val todayDatabaseFormat = LocalDate.now().format( // tạo ngày hiện tại theo định dạng lưu Room
+        DateTimeFormatter.ofPattern("dd/MM/yyyy") // ví dụ 06/07/2026
+    )
+
+    val todayTrips = roomTrips.filter { trip -> // chỉ lấy các chuyến được lưu trong hôm nay
+        trip.date == todayDatabaseFormat // so sánh ngày chuyến với ngày hiện tại
+    }
+
+    val completedTripsToday = todayTrips.filter { trip -> // lọc các chuyến đã hoàn thành hôm nay
+        trip.status == "Đã hoàn thành" // chỉ lấy trạng thái hoàn thành
+    }
+
+    val completedTripCount = completedTripsToday.size // đếm số chuyến đã hoàn thành hôm nay
+
+    val totalPassengersToday = completedTripsToday.sumOf { trip -> // cộng số khách của các chuyến đã hoàn thành
+        trip.passengers.toIntOrNull() ?: 0 // đổi chuỗi số khách thành số nguyên, lỗi thì dùng 0
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -212,13 +240,24 @@ fun DriverHomeScreen(
                 Column(
                     modifier = Modifier.padding(18.dp)
                 ) {
-                    StatisticRow("Số chuyến", "8")
+                    StatisticRow(
+                        label = "Chuyến đã hoàn thành", // số chuyến hoàn thành trong hôm nay
+                        value = completedTripCount.toString() // hiển thị số chuyến từ Room
+                    )
+
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
-                    StatisticRow("Số lượt khách", "156")
+
+                    StatisticRow(
+                        label = "Tổng lượt khách", // tổng khách của các chuyến đã hoàn thành
+                        value = totalPassengersToday.toString() // hiển thị tổng khách từ Room
+                    )
+
                     Divider(modifier = Modifier.padding(vertical = 8.dp))
-                    StatisticRow("Vé bán ra", "120")
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-                    StatisticRow("Vé tháng", "36")
+
+                    StatisticRow(
+                        label = "Chuyến đã lưu hôm nay", // tổng số chuyến đã được lưu trong hôm nay
+                        value = todayTrips.size.toString() // hiển thị số bản ghi Room hôm nay
+                    )
                 }
             }
 
