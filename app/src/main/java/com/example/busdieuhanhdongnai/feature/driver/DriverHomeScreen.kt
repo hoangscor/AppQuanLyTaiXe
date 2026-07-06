@@ -51,7 +51,9 @@ fun DriverHomeScreen(
     onOpenQrCheckIn: () -> Unit = {}, // mở màn quét QR
     onOpenIncidentReport: () -> Unit = {}, // mở màn báo cáo sự cố
     onOpenTripHistory: () -> Unit = {}, // mở màn nhật ký chuyến xe
+    onOpenNextTrip: (String, String, String) -> Unit = { _, _, _ -> }, // mở chuyến kế tiếp cùng tuyến, xe và giờ đã chọn
     tripViewModel: TripViewModel = viewModel() // lấy dữ liệu chuyến xe từ Room
+
 ) {
     val roomTrips by tripViewModel.allTrips.collectAsState( // theo dõi danh sách chuyến từ Room
         initial = emptyList() // dùng danh sách rỗng khi Room chưa trả dữ liệu
@@ -147,6 +149,15 @@ fun DriverHomeScreen(
             else -> "Đã trễ ${-minutesUntilDeparture} phút so với giờ xuất bến" // chuyến đang trễ
         }
     } ?: "Đã hoàn thành tất cả chuyến hôm nay" // hiển thị khi không còn chuyến chưa hoàn thành
+    val nextTripRouteForEntry = when (nextScheduledTrip?.routeName) { // tạo tên tuyến đầy đủ cho màn nhập dữ liệu
+        "TUYẾN 02" -> "Tuyến 02: Bến xe B → Bến xe C" // dữ liệu tuyến 02
+        else -> "Tuyến 01: Bến xe A → Bến xe B" // dữ liệu tuyến 01 hoặc giá trị dự phòng
+    }
+
+    val nextTripVehiclePlate = when (nextScheduledTrip?.routeName) { // chọn biển số xe đúng với tuyến kế tiếp
+        "TUYẾN 02" -> "60C-456.78" // biển số xe của tuyến 02
+        else -> "51B-123.45" // biển số xe của tuyến 01 hoặc giá trị dự phòng
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -187,7 +198,19 @@ fun DriverHomeScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth() // cho thẻ phủ hết chiều ngang
+                    .clickable(
+                        enabled = nextScheduledTrip != null // chỉ bấm được khi còn chuyến chưa hoàn thành
+                    ) {
+                        nextScheduledTrip?.let { scheduledTrip -> // lấy chuyến kế tiếp đang tìm được
+                            onOpenNextTrip(
+                                nextTripRouteForEntry, // gửi tên tuyến đầy đủ sang màn nhập chuyến
+                                nextTripVehiclePlate, // gửi biển số xe tương ứng
+                                scheduledTrip.scheduledTime // gửi đúng khung giờ dự kiến
+                            )
+                        }
+                    },
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White
                 ),

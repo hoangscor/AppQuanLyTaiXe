@@ -60,6 +60,12 @@ fun AppNavGraph() {
                 },
                 onOpenTripHistory = {
                     navController.navigate(Routes.TRIP_HISTORY) // mở màn nhật ký chuyến xe
+                }, // ngăn cách với callback kế tiếp
+                        onOpenNextTrip = { route, vehiclePlate, scheduledTime -> // nhận dữ liệu từ thẻ chuyến kế tiếp
+                    selectedRoute = route // lưu tuyến được chọn
+                    selectedVehiclePlate = vehiclePlate // lưu biển số xe được chọn
+                    selectedScheduledTime = scheduledTime // lưu khung giờ dự kiến được chọn
+                    navController.navigate(Routes.TRIP_ENTRY) // mở màn nhập dữ liệu chuyến
                 }
             )
         }
