@@ -22,9 +22,11 @@ import androidx.compose.material3.CardDefaults // chỉnh màu thẻ
 import androidx.compose.material3.OutlinedTextField // ô nhập dữ liệu
 import androidx.compose.material3.Text // hiển thị chữ
 
+import androidx.compose.runtime.collectAsState // đọc Flow từ Room thành state Compose
+import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
 import androidx.compose.runtime.remember // nhớ ảnh khi đang ở màn hình
 import androidx.compose.runtime.Composable // tạo giao diện Compose
-import androidx.compose.runtime.getValue // đọc state
+
 import androidx.compose.runtime.mutableStateOf // tạo state thay đổi được
 import androidx.compose.runtime.saveable.rememberSaveable // giữ dữ liệu khi xoay màn hình
 import androidx.compose.runtime.setValue // cập nhật state
@@ -42,6 +44,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult // mở camer
 import androidx.activity.result.contract.ActivityResultContracts // dùng chức năng chụp ảnh
 import androidx.compose.foundation.Image // hiển thị ảnh
 
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy IncidentViewModel trong Compose
+import java.time.LocalDate // lấy ngày hiện tại
+import java.time.LocalTime // lấy giờ hiện tại
+import java.time.format.DateTimeFormatter // định dạng ngày và giờ
+
 private val IncidentBlue = Color(0xFF0066CC) // màu xanh chính
 private val IncidentBackground = Color(0xFFF6F8FC) // màu nền trang
 private val IncidentRed = Color(0xFFE53935) // màu sự cố nghiêm trọng
@@ -54,13 +61,29 @@ data class IncidentOption( // dữ liệu một loại sự cố
 )
 
 @Composable
-fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
+fun IncidentReportScreen(
+    onBack: () -> Unit = {}, // nhận lệnh quay lại màn trước
+    incidentViewModel: IncidentViewModel = viewModel() // lấy ViewModel để lưu sự cố vào Room
+) {
     var selectedType by rememberSaveable { mutableStateOf("Chậm chuyến") } // loại sự cố đã chọn
     var description by rememberSaveable { mutableStateOf("") } // nội dung sự cố
     var resultMessage by rememberSaveable { mutableStateOf("") } // thông báo kết quả
     var isSubmitted by rememberSaveable { mutableStateOf(false) } // đã gửi thành công hay chưa
     var incidentPhoto by remember { mutableStateOf<Bitmap?>(null) } // lưu ảnh vừa chụp
     var photoMessage by rememberSaveable { mutableStateOf("") } // thông báo trạng thái ảnh
+    val reportDate = remember { // giữ ngày gửi báo cáo trong suốt lần mở màn hình
+        LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) // định dạng ngày lưu Room
+    }
+
+    val reportTime = remember { // giữ giờ gửi báo cáo trong suốt lần mở màn hình
+        LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) // định dạng giờ lưu Room
+    }
+
+    val reportRoute = "Tuyến 01: Bến xe A → Bến xe B" // tuyến đang báo sự cố
+    val reportVehiclePlate = "51B-123.45" // biển số xe đang báo sự cố
+    val savedIncidents by incidentViewModel.allIncidents.collectAsState(
+        initial = emptyList()
+    ) // theo dõi danh sách báo cáo sự cố đã lưu trong Room
 
     val incidentOptions = listOf( // danh sách loại sự cố
         IncidentOption("Chậm chuyến", "Xe xuất bến hoặc đến trễ so với kế hoạch."),
@@ -142,17 +165,17 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
 
                     IncidentInfoRow(
                         label = "Tuyến",
-                        value = "Tuyến 01: Bến xe A → Bến xe B"
+                        value = reportRoute // hiển thị cùng dữ liệu sẽ lưu vào Room
                     )
 
                     IncidentInfoRow(
                         label = "Xe",
-                        value = "51B-123.45"
+                        value = reportVehiclePlate // hiển thị cùng biển số sẽ lưu vào Room
                     )
 
                     IncidentInfoRow(
                         label = "Thời gian báo",
-                        value = "10:15"
+                        value = reportTime // hiển thị giờ thực tế khi mở màn báo cáo
                     )
                 }
             }
@@ -292,12 +315,17 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                         resultMessage = "Vui lòng nhập mô tả sự cố rõ hơn." // báo thiếu dữ liệu
                         isSubmitted = false // đánh dấu gửi chưa thành công
                     } else {
-                        resultMessage = if (incidentPhoto != null) {
-                            "Đã gửi báo cáo \"$selectedType\" kèm ảnh đến Trung tâm." // đã gửi có ảnh
-                        } else {
-                            "Đã gửi báo cáo \"$selectedType\" đến Trung tâm." // gửi không có ảnh
-                        }
-                        isSubmitted = true // đánh dấu gửi thành công
+                        incidentViewModel.saveIncident(
+                            date = reportDate, // lưu ngày báo cáo vào Room
+                            time = reportTime, // lưu giờ báo cáo vào Room
+                            route = reportRoute, // lưu tuyến xe
+                            vehiclePlate = reportVehiclePlate, // lưu biển số xe
+                            incidentType = selectedType, // lưu loại sự cố được chọn
+                            description = description.trim() // lưu mô tả đã nhập
+                        )
+
+                        resultMessage = "Đã lưu báo cáo \"$selectedType\" vào hệ thống." // thông báo lưu thành công
+                        isSubmitted = true // đổi màu thông báo sang xanh
                     }
                 },
                 modifier = Modifier
@@ -360,6 +388,55 @@ fun IncidentReportScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                         color = Color.DarkGray,
                         fontSize = 13.sp
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp)) // cách giữa lưu ý và báo cáo đã lưu
+
+            Card(
+                modifier = Modifier.fillMaxWidth(), // phủ ngang màn hình
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White // nền trắng cho thẻ
+                ),
+                shape = RoundedCornerShape(14.dp) // bo góc thẻ
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp) // tạo khoảng cách nội dung
+                ) {
+                    Text(
+                        text = "BÁO CÁO ĐÃ LƯU", // tiêu đề dữ liệu đọc từ Room
+                        color = IncidentBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp)) // khoảng cách dưới tiêu đề
+
+                    if (savedIncidents.isEmpty()) {
+                        Text(
+                            text = "Chưa có báo cáo sự cố nào.",
+                            color = Color.Gray,
+                            fontSize = 13.sp
+                        )
+                    } else {
+                        savedIncidents.take(3).forEach { incident ->
+                            Text(
+                                text = "${incident.incidentType} • ${incident.time}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = incident.description,
+                                color = Color.DarkGray,
+                                fontSize = 13.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                    }
                 }
             }
 

@@ -8,13 +8,14 @@ import androidx.room.migration.Migration // khai báo migration khi thay đổi 
 import androidx.sqlite.db.SupportSQLiteDatabase // thao tác SQL trực tiếp trong migration
 
 @Database( // khai báo cấu hình database
-    entities = [TripEntity::class], // bảng trips được Room quản lý
-    version = 3, // phiên bản có thêm khung giờ dự kiến của chuyến
+    entities = [TripEntity::class, IncidentEntity::class], // Room quản lý cả bảng chuyến xe và sự cố
+    version = 4, // tăng phiên bản database vì có thêm bảng incidents
     exportSchema = false // chưa xuất file schema ở giai đoạn này
 )
 abstract class AppDatabase : RoomDatabase() { // database chính của ứng dụng
 
     abstract fun tripDao(): TripDao // cung cấp DAO để thao tác bảng trips
+    abstract fun incidentDao(): IncidentDao // cung cấp DAO để thao tác bảng incidents
 
     companion object { // nơi giữ một bản database duy nhất
         private val MIGRATION_1_2 = object : Migration(1, 2) { // chuyển database từ version 1 sang version 2
@@ -32,6 +33,24 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                 ) // thêm cột giờ dự kiến, dữ liệu cũ để trống
             }
         }
+        private val MIGRATION_3_4 = object : Migration(3, 4) { // nâng database từ version 3 lên version 4
+            override fun migrate(db: SupportSQLiteDatabase) { // chạy khi app đang có database version 3
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS incidents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                date TEXT NOT NULL,
+                time TEXT NOT NULL,
+                route TEXT NOT NULL,
+                vehiclePlate TEXT NOT NULL,
+                incidentType TEXT NOT NULL,
+                description TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+            """.trimIndent()
+                ) // tạo bảng lưu báo cáo sự cố
+            }
+        }
 
         @Volatile // giúp các luồng đọc đúng dữ liệu mới nhất
         private var INSTANCE: AppDatabase? = null // biến lưu database đang dùng
@@ -42,7 +61,11 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                     context.applicationContext, // dùng Context của toàn app
                     AppDatabase::class.java, // chỉ định lớp database này
                     "bus_dieu_hanh_database" // tên file database lưu trong máy
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3) // áp dụng toàn bộ migration giữ dữ liệu cũ
+                ).addMigrations(
+                    MIGRATION_1_2, // thêm biển số xe
+                    MIGRATION_2_3, // thêm giờ dự kiến
+                    MIGRATION_3_4 // thêm bảng báo cáo sự cố
+                )
                     .build() // hoàn tất tạo database
 
                 INSTANCE = instance // lưu lại để lần sau dùng tiếp
