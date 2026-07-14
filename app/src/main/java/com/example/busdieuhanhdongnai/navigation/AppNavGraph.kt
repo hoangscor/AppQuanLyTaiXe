@@ -1,5 +1,5 @@
 package com.example.busdieuhanhdongnai.navigation
-
+import com.example.busdieuhanhdongnai.feature.driver.incident.IncidentHistoryScreen // màn danh sách báo cáo sự cố đã lưu
 import androidx.compose.runtime.getValue // đọc giá trị state
 import androidx.compose.runtime.mutableStateOf // tạo state có thể thay đổi
 import androidx.compose.runtime.saveable.rememberSaveable // giữ dữ liệu khi xoay màn hình
@@ -58,6 +58,9 @@ fun AppNavGraph() {
                 onOpenIncidentReport = {
                     navController.navigate(Routes.INCIDENT_REPORT) // mở màn báo cáo sự cố
                 },
+                onOpenIncidentHistory = {
+                    navController.navigate(Routes.INCIDENT_HISTORY) // mở danh sách sự cố đã lưu trong Room
+                },
                 onOpenTripHistory = {
                     navController.navigate(Routes.TRIP_HISTORY) // mở màn nhật ký chuyến xe
                 }, // ngăn cách với callback kế tiếp
@@ -111,6 +114,13 @@ fun AppNavGraph() {
             IncidentReportScreen(
                 onBack = {
                     navController.popBackStack() // quay về trang trước
+                }
+            )
+        }
+        composable(Routes.INCIDENT_HISTORY) { // khai báo màn danh sách báo cáo sự cố
+            IncidentHistoryScreen(
+                onBack = {
+                    navController.popBackStack() // quay về màn trước
                 }
             )
         }

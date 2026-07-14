@@ -8,5 +8,6 @@ object Routes {
     const val TRIP_ENTRY = "trip_entry" // màn nhập dữ liệu chuyến
     const val QR_CHECKIN = "qr_checkin" // màn quét QR hoặc thẻ điện tử
     const val INCIDENT_REPORT = "incident_report" // màn báo cáo sự cố
+    const val INCIDENT_HISTORY = "incident_history" // màn danh sách báo cáo sự cố đã lưu
     const val TRIP_HISTORY = "trip_history" // màn nhật ký chuyến xe
 }
