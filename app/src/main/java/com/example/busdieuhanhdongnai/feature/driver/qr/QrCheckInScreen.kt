@@ -1,5 +1,11 @@
 package com.example.busdieuhanhdongnai.feature.driver.qr
 
+import androidx.compose.runtime.collectAsState // chuyển Flow Room thành state Compose
+import androidx.compose.runtime.remember // giữ Flow ổn định khi giao diện cập nhật
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy CheckInViewModel trong Compose
+import java.time.LocalDate // lấy ngày hiện tại
+import java.time.LocalTime // lấy giờ hành khách check-in
+import java.time.format.DateTimeFormatter // định dạng ngày lưu trong Room
 import androidx.compose.foundation.background // tô nền giao diện
 import androidx.compose.foundation.clickable // cho phép bấm
 import androidx.compose.foundation.layout.Arrangement // tạo khoảng cách đều
@@ -38,17 +44,42 @@ private val QrOrange = Color(0xFFFF9800) // màu chờ xử lý
 private val QrRed = Color(0xFFE53935) // màu báo lỗi
 
 @Composable
-fun QrCheckInScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
+fun QrCheckInScreen(
+    onBack: () -> Unit = {}, // nhận lệnh quay lại
+    checkInViewModel: CheckInViewModel = viewModel() // lấy ViewModel thao tác dữ liệu Room
+) {
     var passengerCode by rememberSaveable { mutableStateOf("") } // mã QR hoặc mã thẻ
     var resultMessage by rememberSaveable { mutableStateOf("") } // kết quả quét
     var isSuccess by rememberSaveable { mutableStateOf(false) } // lưu kết quả thành công hay lỗi
+    val checkInDate = remember { // giữ ngày check-in trong lần mở màn hình
+        LocalDate.now().format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy") // định dạng ngày giống dữ liệu Room
+        )
+    }
 
+    val currentRoute = "Tuyến 01: Bến xe A → Bến xe B" // tuyến đang thực hiện
+    val currentVehiclePlate = "51B-123.45" // biển số xe đang thực hiện chuyến
+    val currentScheduledTime = "07:00 - 08:00" // khung giờ dùng để phân biệt chuyến
+
+    val checkInCountFlow = remember(
+        checkInDate,
+        currentScheduledTime
+    ) {
+        checkInViewModel.getCheckInCountByTrip(
+            date = checkInDate, // lọc lượt check-in theo ngày
+            scheduledTime = currentScheduledTime // lọc theo đúng chuyến
+        )
+    }
+
+    val checkedPassengerCount by checkInCountFlow.collectAsState(
+        initial = 0 // ban đầu hiển thị 0 khi Room chưa trả dữ liệu
+    )
     val resultColor = when {
         resultMessage.isBlank() -> QrOrange // chưa có kết quả
         isSuccess -> QrGreen // check-in thành công
         else -> QrRed // có lỗi
     }
-    var checkedPassengerCount by rememberSaveable { mutableStateOf(0) } // số khách đã check-in
+
 
     Column(
         modifier = Modifier
@@ -112,17 +143,17 @@ fun QrCheckInScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
 
                     QrInfoRow(
                         label = "Tuyến",
-                        value = "Tuyến 01: Bến xe A → Bến xe B"
+                        value = currentRoute // hiển thị tuyến dùng cho dữ liệu check-in
                     )
 
                     QrInfoRow(
                         label = "Xe",
-                        value = "51B-123.45"
+                        value = currentVehiclePlate // hiển thị biển số xe của chuyến
                     )
 
                     QrInfoRow(
                         label = "Giờ xuất bến",
-                        value = "07:00"
+                        value = currentScheduledTime.substringBefore(" - ") // lấy giờ xuất bến đầu tiên
                     )
 
                     QrInfoRow(
@@ -208,12 +239,32 @@ fun QrCheckInScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                         } else if (passengerCode.length < 4) {
                             resultMessage = "Mã chưa hợp lệ, vui lòng kiểm tra lại." // báo mã ngắn
                             isSuccess = false // đánh dấu lỗi
-                        } else {
-                            checkedPassengerCount += 1 // tăng số khách check-in
-                            resultMessage = "Check-in thành công: $passengerCode" // báo thành công
-                            isSuccess = true // đánh dấu thành công
-                            passengerCode = "" // xóa mã sau khi xác nhận
-                        }
+                            } else {
+                                val submittedCode = passengerCode.trim() // giữ lại mã đang được xác nhận
+
+                                val checkInTime = LocalTime.now().format(
+                                    DateTimeFormatter.ofPattern("HH:mm") // định dạng giờ lưu Room
+                                )
+
+                                checkInViewModel.saveCheckIn(
+                                    passengerCode = submittedCode, // lưu mã QR hoặc mã thẻ
+                                    date = checkInDate, // lưu ngày hiện tại
+                                    time = checkInTime, // lưu giờ check-in thực tế
+                                    route = currentRoute, // lưu tuyến đang thực hiện
+                                    vehiclePlate = currentVehiclePlate, // lưu biển số xe
+                                    scheduledTime = currentScheduledTime, // lưu đúng khung giờ chuyến
+                                    onResult = { isSaved -> // nhận kết quả lưu từ Room
+                                        if (isSaved) {
+                                            resultMessage = "Check-in thành công: $submittedCode" // thông báo lưu thành công
+                                            isSuccess = true // dùng màu xanh
+                                            passengerCode = "" // xóa mã sau khi lưu thành công
+                                        } else {
+                                            resultMessage = "Mã $submittedCode đã check-in trong chuyến này." // báo mã bị trùng
+                                            isSuccess = false // dùng màu đỏ
+                                        }
+                                    }
+                                )
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth() // phủ ngang màn hình
