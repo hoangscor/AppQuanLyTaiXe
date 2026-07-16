@@ -32,10 +32,14 @@ import androidx.compose.ui.graphics.Color // dùng màu
 import androidx.compose.ui.text.font.FontWeight // chỉnh độ đậm chữ
 import androidx.compose.ui.unit.dp // đơn vị khoảng cách
 import androidx.compose.ui.unit.sp // đơn vị cỡ chữ
+import androidx.compose.runtime.collectAsState // chuyển Flow số khách từ Room thành state Compose
+import androidx.compose.runtime.remember // giữ Flow ổn định khi giao diện cập nhật
+import com.example.busdieuhanhdongnai.feature.driver.qr.CheckInViewModel // đọc dữ liệu khách check-in từ Room
 
 import java.time.LocalDate // lấy ngày hiện tại từ thiết bị
 import java.time.LocalTime // lấy giờ hiện tại từ thiết bị
 import java.time.format.DateTimeFormatter // định dạng ngày để hiển thị
+
 
 private val TripBlue = Color(0xFF0066CC) // màu xanh chính
 private val TripBackground = Color(0xFFF6F8FC) // màu nền trang
@@ -48,14 +52,35 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
     selectedRoute: String = "Tuyến 01: Bến xe A → Bến xe B", // nhận tên tuyến đã chọn từ lịch trình
     selectedVehiclePlate: String = "51B-123.45", // nhận biển số xe đã chọn từ lịch trình
     selectedScheduledTime: String = "07:00 - 08:00", // nhận giờ dự kiến đã chọn từ lịch trình
-    tripViewModel: TripViewModel = viewModel() // dùng ViewModel để lưu chuyến vào Room
+    tripViewModel: TripViewModel = viewModel(), // dùng ViewModel để lưu chuyến vào Room
+    checkInViewModel: CheckInViewModel = viewModel() // dùng ViewModel để đọc số khách check-in
 ) {
-    var passengerCount by rememberSaveable { mutableStateOf("") } // số khách nhập vào
+
     var tripNote by rememberSaveable { mutableStateOf("") } // ghi chú chuyến xe
     var tripStarted by rememberSaveable { mutableStateOf(false) } // trạng thái chuyến xe
     var tripCompleted by rememberSaveable { mutableStateOf(false) } // đánh dấu chuyến đã hoàn thành
     var resultMessage by rememberSaveable { mutableStateOf("") } // thông báo kết quả
     var tripStartTime by rememberSaveable { mutableStateOf("") } // lưu giờ bắt đầu chuyến thực tế
+    val tripDate = remember { // giữ ngày thực hiện chuyến trong lần mở màn hình
+        LocalDate.now().format(
+            DateTimeFormatter.ofPattern("dd/MM/yyyy") // định dạng ngày giống dữ liệu check-in trong Room
+        )
+    }
+
+
+    val checkInCountFlow = remember(
+        key1 = tripDate, // cập nhật Flow khi ngày chuyến thay đổi
+        key2 = selectedScheduledTime // dùng nguyên khung giờ giống dữ liệu đã lưu từ màn QR
+    ) {
+        checkInViewModel.getCheckInCountByTrip(
+            date = tripDate, // lọc lượt check-in theo đúng ngày
+            scheduledTime = selectedScheduledTime // lọc đúng chuỗi 07:00 - 08:00 trong Room
+        )
+    }
+
+    val checkedPassengerCount by checkInCountFlow.collectAsState(
+        initial = 0 // ban đầu hiển thị 0 khi Room chưa trả dữ liệu
+    )
     val statusText = when { // xác định chữ trạng thái
         tripCompleted -> "Đã hoàn thành" // chuyến đã kết thúc
         tripStarted -> "Đang thực hiện" // chuyến đang chạy
@@ -170,16 +195,14 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                     )
 
                     OutlinedTextField(
-                        value = passengerCount,
-                        onValueChange = { passengerCount = it }, // cập nhật số khách
+                        value = checkedPassengerCount.toString(), // hiển thị số khách check-in lấy từ Room
+                        onValueChange = {}, // không cho nhập thủ công vì dữ liệu được lấy tự động
                         label = {
-                            Text("Số lượt khách") // nhãn ô nhập
-                        },
-                        placeholder = {
-                            Text("Ví dụ: 35") // gợi ý nhập
+                            Text("Số lượt khách đã check-in") // nhãn số khách tự động
                         },
                         modifier = Modifier.fillMaxWidth(), // phủ ngang màn hình
-                        singleLine = true // chỉ nhập một dòng
+                        readOnly = true, // chỉ cho xem, không cho sửa
+                        singleLine = true // chỉ hiển thị một dòng
                     )
 
                     OutlinedTextField(
@@ -205,8 +228,6 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                         tripStarted = true // chuyển sang trạng thái đang chạy
                         tripStartTime = currentStartTime // lưu giờ bắt đầu thực tế
                         resultMessage = "Đã bắt đầu chuyến xe lúc $currentStartTime." // báo đã bắt đầu với giờ thực tế
-                    } else if (tripStarted && passengerCount.isBlank()) { // kiểm tra số khách trước khi kết thúc
-                        resultMessage = "Vui lòng nhập số lượt khách trước khi kết thúc chuyến." // nhắc nhập dữ liệu
                     } else if (tripStarted) { // kết thúc khi chuyến đang chạy
                         val currentEndTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")) // lấy giờ kết thúc hiện tại
                         tripStarted = false // dừng trạng thái đang chạy
@@ -219,7 +240,7 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                             vehiclePlate = selectedVehiclePlate, // lưu biển số xe đã chọn vào Room
                             scheduledTime = selectedScheduledTime, // lưu khung giờ dự kiến của chuyến đã chọn
                             time = "$tripStartTime - $currentEndTime", // ghép giờ bắt đầu và giờ kết thúc thực tế
-                            passengers = passengerCount, // số lượt khách đã nhập
+                            passengers = checkedPassengerCount.toString(), // lưu số khách check-in thực tế từ Room
                             status = "Đã hoàn thành", // trạng thái khi lưu
                             note = tripNote // ghi chú hoặc sự cố của chuyến
                         )
@@ -281,8 +302,8 @@ fun TripEntryScreen( // hiển thị và lưu dữ liệu của chuyến xe đư
                     )
 
                     TripInfoRow(
-                        label = "Số khách",
-                        value = if (passengerCount.isBlank()) "Chưa nhập" else "$passengerCount khách"
+                        label = "Số khách đã check-in", // tên dữ liệu tự động
+                        value = "$checkedPassengerCount khách" // hiển thị tổng số khách lấy từ Room
                     )
 
                     TripInfoRow(
