@@ -74,6 +74,19 @@ fun QrCheckInScreen(
     val checkedPassengerCount by checkInCountFlow.collectAsState(
         initial = 0 // ban đầu hiển thị 0 khi Room chưa trả dữ liệu
     )
+    val checkInsFlow = remember(
+        checkInDate, // cập nhật danh sách khi ngày thay đổi
+        currentScheduledTime // cập nhật danh sách khi chuyến thay đổi
+    ) {
+        checkInViewModel.getCheckInsByTrip(
+            date = checkInDate, // lấy hành khách đúng ngày hiện tại
+            scheduledTime = currentScheduledTime // lấy hành khách đúng chuyến hiện tại
+        )
+    }
+
+    val checkedPassengers by checkInsFlow.collectAsState(
+        initial = emptyList() // ban đầu dùng danh sách rỗng khi Room chưa trả dữ liệu
+    )
     val resultColor = when {
         resultMessage.isBlank() -> QrOrange // chưa có kết quả
         isSuccess -> QrGreen // check-in thành công
@@ -298,7 +311,79 @@ fun QrCheckInScreen(
                     )
                 }
             }
+            Card(
+                modifier = Modifier.fillMaxWidth(), // phủ toàn bộ chiều ngang
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White // nền trắng cho danh sách hành khách
+                ),
+                shape = RoundedCornerShape(14.dp) // bo góc thẻ
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp), // tạo lề bên trong thẻ
+                    verticalArrangement = Arrangement.spacedBy(10.dp) // cách các dòng hành khách
+                ) {
+                    Text(
+                        text = "HÀNH KHÁCH ĐÃ CHECK-IN", // tiêu đề danh sách
+                        color = QrBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp
+                    )
 
+                    Text(
+                        text = "Tổng cộng: $checkedPassengerCount hành khách", // hiện tổng số từ Room
+                        color = QrGreen,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+
+                    if (checkedPassengers.isEmpty()) { // chưa có hành khách trong chuyến
+                        Text(
+                            text = "Chưa có hành khách nào check-in.", // thông báo danh sách rỗng
+                            color = Color.Gray,
+                            fontSize = 13.sp
+                        )
+                    } else {
+                        checkedPassengers.take(5).forEachIndexed { index, passenger -> // chỉ hiện 5 lượt mới nhất
+                            Row(
+                                modifier = Modifier.fillMaxWidth(), // phủ ngang dòng hành khách
+                                horizontalArrangement = Arrangement.SpaceBetween, // mã bên trái, giờ bên phải
+                                verticalAlignment = Alignment.CenterVertically // căn giữa theo chiều dọc
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f) // phần mã hành khách chiếm khoảng trống
+                                ) {
+                                    Text(
+                                        text = "${index + 1}. ${passenger.passengerCode}", // số thứ tự và mã hành khách
+                                        color = Color.DarkGray,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+
+                                    Text(
+                                        text = passenger.status, // trạng thái đã check-in
+                                        color = QrGreen,
+                                        fontSize = 12.sp
+                                    )
+                                }
+
+                                Text(
+                                    text = passenger.time, // giờ hành khách check-in
+                                    color = Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+
+                        if (checkedPassengers.size > 5) { // khi có nhiều hơn 5 hành khách
+                            Text(
+                                text = "Và ${checkedPassengers.size - 5} hành khách khác...", // báo số lượng còn lại
+                                color = Color.Gray,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
             Card(
                 modifier = Modifier.fillMaxWidth(), // phủ ngang màn hình
                 colors = CardDefaults.cardColors(
