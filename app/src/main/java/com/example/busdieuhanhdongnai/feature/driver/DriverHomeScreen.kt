@@ -2,6 +2,7 @@ package com.example.busdieuhanhdongnai.feature.driver
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box // dùng để đặt huy hiệu lên góc thẻ thông báo
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,7 @@ import androidx.compose.runtime.collectAsState // theo dõi Flow dữ liệu Roo
 import androidx.compose.runtime.getValue // cho phép đọc state bằng từ khóa by
 import androidx.lifecycle.viewmodel.compose.viewModel // lấy ViewModel trong Compose
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // dùng ViewModel đọc lịch sử chuyến
+import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationViewModel // dùng ViewModel đọc số thông báo chưa đọc
 import java.time.LocalDate // lấy ngày hiện tại của thiết bị
 import java.time.LocalTime // lấy giờ hiện tại để xác định chuyến tiếp theo
 import java.time.Duration // tính số phút còn lại đến giờ xuất bến
@@ -53,11 +55,15 @@ fun DriverHomeScreen(
     onOpenIncidentHistory: () -> Unit = {}, // mở danh sách báo cáo sự cố đã lưu
     onOpenTripHistory: () -> Unit = {}, // mở màn nhật ký chuyến xe
     onOpenNextTrip: (String, String, String) -> Unit = { _, _, _ -> }, // mở chuyến kế tiếp cùng tuyến, xe và giờ đã chọn
-    tripViewModel: TripViewModel = viewModel() // lấy dữ liệu chuyến xe từ Room
+    tripViewModel: TripViewModel = viewModel(), // lấy dữ liệu chuyến xe từ Room
+    notificationViewModel: NotificationViewModel = viewModel() // lấy số thông báo chưa đọc từ Room
 
 ) {
     val roomTrips by tripViewModel.allTrips.collectAsState( // theo dõi danh sách chuyến từ Room
         initial = emptyList() // dùng danh sách rỗng khi Room chưa trả dữ liệu
+    )
+    val unreadNotificationCount by notificationViewModel.unreadNotificationCount.collectAsState(
+        initial = 0 // ban đầu hiển thị 0 khi Room chưa trả dữ liệu
     )
 
     val todayDatabaseFormat = LocalDate.now().format( // tạo ngày hiện tại theo định dạng lưu Room
@@ -312,6 +318,7 @@ fun DriverHomeScreen(
                     icon = "🔔",
                     title = "Thông báo",
                     modifier = Modifier.weight(1f),
+                    badgeCount = unreadNotificationCount, // hiển thị số thông báo chưa đọc
                     onClick = onOpenNotifications // bấm để mở thông báo
                 )
             }
@@ -390,6 +397,7 @@ fun DriverMenuCard(
     title: String, // tên chức năng
     modifier: Modifier = Modifier, // modifier truyền từ bên ngoài
     enabled: Boolean = true, // xác định thẻ có được bấm hay không
+    badgeCount: Int = 0, // số lượng thông báo chưa đọc cần hiển thị
     onClick: () -> Unit = {} // hành động khi tài xế bấm thẻ
 ) {
     val cardBackgroundColor = if (enabled) { // chọn màu nền theo trạng thái thẻ
@@ -417,28 +425,49 @@ fun DriverMenuCard(
         ),
         shape = RoundedCornerShape(14.dp) // bo góc thẻ
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize() // phủ toàn bộ thẻ
-                .padding(12.dp), // tạo khoảng cách nội dung
-            horizontalAlignment = Alignment.CenterHorizontally, // căn giữa ngang
-            verticalArrangement = Arrangement.Center // căn giữa dọc
+        Box(
+            modifier = Modifier.fillMaxSize() // cho Box phủ toàn bộ thẻ
         ) {
-            Text(
-                text = icon, // hiển thị biểu tượng
-                fontSize = 28.sp, // cỡ biểu tượng
-                color = contentColor // đổi màu theo trạng thái
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize() // phủ toàn bộ thẻ
+                    .padding(12.dp), // tạo khoảng cách nội dung
+                horizontalAlignment = Alignment.CenterHorizontally, // căn giữa ngang
+                verticalArrangement = Arrangement.Center // căn giữa dọc
+            ) {
+                Text(
+                    text = icon, // hiển thị biểu tượng
+                    fontSize = 28.sp, // cỡ biểu tượng
+                    color = contentColor // đổi màu theo trạng thái
+                )
 
-            Spacer(modifier = Modifier.height(8.dp)) // khoảng cách biểu tượng và chữ
+                Spacer(modifier = Modifier.height(8.dp)) // khoảng cách biểu tượng và chữ
 
-            Text(
-                text = title, // hiển thị tên chức năng
-                color = contentColor, // đổi màu theo trạng thái
-                textAlign = TextAlign.Center, // căn giữa chữ
-                fontWeight = FontWeight.Bold, // in đậm chữ
-                fontSize = 13.sp // cỡ chữ
-            )
+                Text(
+                    text = title, // hiển thị tên chức năng
+                    color = contentColor, // đổi màu theo trạng thái
+                    textAlign = TextAlign.Center, // căn giữa chữ
+                    fontWeight = FontWeight.Bold, // in đậm chữ
+                    fontSize = 13.sp // cỡ chữ
+                )
+            }
+            if (badgeCount > 0) { // chỉ hiện huy hiệu khi có thông báo chưa đọc
+                Text(
+                    text = if (badgeCount > 99) "99+" else badgeCount.toString(), // hiển thị số thông báo
+                    color = Color.White, // dùng chữ màu trắng
+                    fontWeight = FontWeight.Bold, // in đậm số thông báo
+                    fontSize = 11.sp, // đặt cỡ chữ nhỏ cho huy hiệu
+                    textAlign = TextAlign.Center, // căn giữa số trong huy hiệu
+                    modifier = Modifier
+                        .align(Alignment.TopEnd) // đặt huy hiệu ở góc trên bên phải
+                        .padding(top = 8.dp, end = 8.dp) // tạo khoảng cách với mép thẻ
+                        .background(
+                            color = Color(0xFFE53935), // dùng nền đỏ cho huy hiệu
+                            shape = RoundedCornerShape(50.dp) // bo tròn nền huy hiệu
+                        )
+                        .padding(horizontal = 7.dp, vertical = 3.dp) // tạo kích thước cho huy hiệu
+                )
+            }
         }
     }
 }
