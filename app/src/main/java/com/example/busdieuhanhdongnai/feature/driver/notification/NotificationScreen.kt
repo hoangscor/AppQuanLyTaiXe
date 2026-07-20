@@ -21,6 +21,8 @@ import androidx.compose.runtime.getValue // đọc state
 import androidx.compose.runtime.mutableStateOf // tạo state thay đổi được
 import androidx.compose.runtime.saveable.rememberSaveable // giữ state khi xoay màn hình
 import androidx.compose.runtime.setValue // cập nhật state
+import androidx.compose.runtime.collectAsState // chuyển Flow thông báo từ Room thành state Compose
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy NotificationViewModel trong màn hình
 import androidx.compose.ui.Alignment // căn chỉnh
 import androidx.compose.ui.Modifier // chỉnh giao diện
 import androidx.compose.ui.draw.clip // cắt theo bo góc
@@ -37,6 +39,8 @@ private val NotificationOrange = Color(0xFFFF9800) // màu cảnh báo cam
 private val NotificationGreen = Color(0xFF1A9B54) // màu thông báo bình thường
 
 data class BusNotification( // dữ liệu một thông báo
+    val id: Int, // id của thông báo trong Room
+    val isRead: Boolean, // trạng thái thông báo đã đọc hay chưa
     val icon: String, // biểu tượng thông báo
     val title: String, // tiêu đề thông báo
     val content: String, // nội dung thông báo
@@ -46,51 +50,45 @@ data class BusNotification( // dữ liệu một thông báo
 )
 
 @Composable
-fun NotificationScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
+fun NotificationScreen(
+    onBack: () -> Unit = {}, // nhận lệnh quay lại
+    notificationViewModel: NotificationViewModel = viewModel() // lấy ViewModel để đọc thông báo từ Room
+) {
     var selectedTab by rememberSaveable { mutableStateOf("Tất cả") } // tab đang chọn
-
-    val notificationList = listOf( // danh sách dữ liệu mẫu
-        BusNotification(
-            icon = "⚠",
-            title = "Cảnh báo chậm chuyến",
-            content = "Chuyến 10:00 tuyến 01 đang chậm 15 phút.",
-            time = "10:15",
-            type = "Cảnh báo",
-            color = NotificationRed
-        ),
-        BusNotification(
-            icon = "✕",
-            title = "Cảnh báo bỏ chuyến",
-            content = "Phương tiện 51B-123.45 chưa thực hiện chuyến 11:00.",
-            time = "11:10",
-            type = "Cảnh báo",
-            color = NotificationRed
-        ),
-        BusNotification(
-            icon = "i",
-            title = "Thông báo từ Trung tâm",
-            content = "Thay đổi lộ trình tuyến 01 từ 14:00 đến 16:00.",
-            time = "09:15",
-            type = "Trung tâm",
-            color = NotificationBlue
-        ),
-        BusNotification(
-            icon = "✓",
-            title = "Nhắc trước giờ xuất bến",
-            content = "Chuyến 12:00 tuyến 01 sẽ xuất bến sau 15 phút.",
-            time = "11:45",
-            type = "Nhắc giờ",
-            color = NotificationGreen
-        ),
-        BusNotification(
-            icon = "!",
-            title = "Điều chỉnh biểu đồ chạy xe",
-            content = "Tuyến 01 cần thực hiện đúng tần suất theo kế hoạch.",
-            time = "08:30",
-            type = "Trung tâm",
-            color = NotificationOrange
-        )
+    val savedNotifications by notificationViewModel.allNotifications.collectAsState(
+        initial = emptyList() // ban đầu dùng danh sách rỗng khi Room chưa trả dữ liệu
     )
+
+    val unreadCount by notificationViewModel.unreadNotificationCount.collectAsState(
+        initial = 0 // ban đầu chưa có thông báo chưa đọc
+    )
+
+    val notificationList = savedNotifications.map { notification -> // chuyển dữ liệu Room sang model giao diện hiện tại
+        val displayColor = when (notification.type) { // chọn màu theo loại thông báo
+            "Cảnh báo" -> NotificationRed // cảnh báo dùng màu đỏ
+            "Trung tâm" -> NotificationBlue // thông báo Trung tâm dùng màu xanh
+            "Nhắc giờ" -> NotificationGreen // nhắc giờ dùng màu xanh lá
+            else -> NotificationOrange // loại còn lại dùng màu cam
+        }
+
+        val displayIcon = when (notification.type) { // chọn biểu tượng theo loại thông báo
+            "Cảnh báo" -> "⚠" // biểu tượng cảnh báo
+            "Trung tâm" -> "i" // biểu tượng thông tin
+            "Nhắc giờ" -> "✓" // biểu tượng nhắc giờ
+            else -> "!" // biểu tượng thông báo thông thường
+        }
+
+        BusNotification(
+            id = notification.id, // lấy id thông báo từ Room
+            isRead = notification.isRead, // lấy trạng thái đã đọc từ Room
+            icon = displayIcon, // gán biểu tượng đã xác định
+            title = notification.title, // lấy tiêu đề từ Room
+            content = notification.message, // lấy nội dung từ Room
+            time = notification.time, // lấy giờ tạo thông báo
+            type = notification.type, // lấy loại thông báo
+            color = displayColor // gán màu trạng thái
+        )
+    }
 
     val filteredList = when (selectedTab) { // lọc danh sách theo tab
         "Cảnh báo" -> notificationList.filter { it.type == "Cảnh báo" }
@@ -129,7 +127,11 @@ fun NotificationScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
                 )
 
                 Text(
-                    text = "Cảnh báo và điều hành tuyến xe",
+                    text = if (unreadCount > 0) { // kiểm tra có thông báo chưa đọc hay không
+                        "Cảnh báo và điều hành tuyến xe • $unreadCount chưa đọc" // hiện số thông báo chưa đọc
+                    } else {
+                        "Cảnh báo và điều hành tuyến xe" // không hiện số khi đã đọc hết
+                    },
                     color = Color.White,
                     fontSize = 13.sp
                 )
@@ -164,16 +166,62 @@ fun NotificationScreen(onBack: () -> Unit = {}) { // nhận lệnh quay lại
         Column(
             modifier = Modifier.padding(horizontal = 16.dp) // lề cho danh sách
         ) {
-            Text(
-                text = "Danh sách thông báo",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(), // cho hàng tiêu đề phủ toàn chiều ngang
+                horizontalArrangement = Arrangement.SpaceBetween, // đẩy tiêu đề và nút sang hai bên
+                verticalAlignment = Alignment.CenterVertically // căn giữa theo chiều dọc
+            ) {
+                Text(
+                    text = "Danh sách thông báo", // tiêu đề danh sách
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+
+                if (unreadCount > 0) { // chỉ hiện nút khi còn thông báo chưa đọc
+                    Text(
+                        text = "Đọc tất cả", // nút đánh dấu toàn bộ thông báo đã đọc
+                        color = NotificationBlue,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        modifier = Modifier
+                            .clickable {
+                                notificationViewModel.markAllNotificationsAsRead() // cập nhật tất cả trong Room
+                            }
+                            .padding(horizontal = 4.dp, vertical = 6.dp) // tăng vùng bấm
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp)) // cách tiêu đề với danh sách
 
-            filteredList.forEach { item -> // hiển thị từng thông báo
-                NotificationItem(item = item) // tạo thẻ thông báo
+            if (filteredList.isEmpty()) { // kiểm tra tab hiện tại có thông báo hay không
+                Card(
+                    modifier = Modifier.fillMaxWidth(), // thẻ phủ toàn chiều ngang
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White // nền trắng cho trạng thái rỗng
+                    ),
+                    shape = RoundedCornerShape(14.dp) // bo góc thẻ
+                ) {
+                    Text(
+                        text = "Chưa có thông báo nào.", // thông báo khi Room đang rỗng
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(16.dp) // tạo lề cho nội dung
+                    )
+                }
+            } else {
+                filteredList.forEach { item -> // hiển thị từng thông báo đã lọc
+                    NotificationItem(
+                        item = item, // truyền dữ liệu thông báo vào thẻ
+                        onClick = {
+                            if (!item.isRead) { // chỉ cập nhật khi thông báo chưa được đọc
+                                notificationViewModel.markNotificationAsRead(
+                                    notificationId = item.id // gửi id xuống ViewModel để cập nhật Room
+                                )
+                            }
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp)) // chừa khoảng trống cuối trang
@@ -202,13 +250,23 @@ fun NotificationTab(
 }
 
 @Composable
-fun NotificationItem(item: BusNotification) {
+fun NotificationItem(
+    item: BusNotification, // dữ liệu của một thông báo
+    onClick: () -> Unit // xử lý khi người dùng bấm vào thẻ
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth() // phủ ngang màn hình
-            .padding(bottom = 10.dp), // cách các thẻ với nhau
+            .padding(bottom = 10.dp) // cách các thẻ với nhau
+            .clickable {
+                onClick() // đánh dấu thông báo đã đọc khi bấm
+            },
         colors = CardDefaults.cardColors(
-            containerColor = Color.White // nền trắng cho thẻ
+            containerColor = if (item.isRead) {
+                Color(0xFFF1F3F5) // nền xám nhạt khi thông báo đã đọc
+            } else {
+                Color.White // nền trắng khi thông báo chưa đọc
+            }
         ),
         shape = RoundedCornerShape(14.dp) // bo góc thẻ
     ) {

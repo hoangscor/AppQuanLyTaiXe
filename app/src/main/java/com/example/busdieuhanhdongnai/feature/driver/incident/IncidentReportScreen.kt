@@ -48,7 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel // lấy IncidentViewModel
 import java.time.LocalDate // lấy ngày hiện tại
 import java.time.LocalTime // lấy giờ hiện tại
 import java.time.format.DateTimeFormatter // định dạng ngày và giờ
-
+import com.example.busdieuhanhdongnai.feature.driver.notification.NotificationViewModel // dùng ViewModel để tạo thông báo sau khi gửi sự cố
 private val IncidentBlue = Color(0xFF0066CC) // màu xanh chính
 private val IncidentBackground = Color(0xFFF6F8FC) // màu nền trang
 private val IncidentRed = Color(0xFFE53935) // màu sự cố nghiêm trọng
@@ -63,7 +63,8 @@ data class IncidentOption( // dữ liệu một loại sự cố
 @Composable
 fun IncidentReportScreen(
     onBack: () -> Unit = {}, // nhận lệnh quay lại màn trước
-    incidentViewModel: IncidentViewModel = viewModel() // lấy ViewModel để lưu sự cố vào Room
+    incidentViewModel: IncidentViewModel = viewModel(), // lấy ViewModel để lưu sự cố vào Room
+    notificationViewModel: NotificationViewModel = viewModel() // lấy ViewModel để tạo thông báo trong Room
 ) {
     var selectedType by rememberSaveable { mutableStateOf("Chậm chuyến") } // loại sự cố đã chọn
     var description by rememberSaveable { mutableStateOf("") } // nội dung sự cố
@@ -322,6 +323,13 @@ fun IncidentReportScreen(
                             vehiclePlate = reportVehiclePlate, // lưu biển số xe
                             incidentType = selectedType, // lưu loại sự cố được chọn
                             description = description.trim() // lưu mô tả đã nhập
+                        )
+                        notificationViewModel.saveNotification(
+                            title = "Báo cáo sự cố: $selectedType", // tạo tiêu đề thông báo theo loại sự cố
+                            message = "$reportRoute - Xe $reportVehiclePlate: ${description.trim()}", // lưu nội dung chi tiết của báo cáo
+                            date = reportDate, // dùng cùng ngày báo cáo sự cố
+                            time = reportTime, // dùng cùng giờ báo cáo sự cố
+                            type = "Cảnh báo" // đưa thông báo vào tab Cảnh báo
                         )
 
                         resultMessage = "Đã lưu báo cáo \"$selectedType\" vào hệ thống." // thông báo lưu thành công
