@@ -166,10 +166,44 @@ fun TripHistoryScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            tripList.forEach { trip -> // hiển thị danh sách chuyến xe từ Room
-                TripHistoryCard(trip = trip)
+            if (tripList.isEmpty()) { // kiểm tra Room hiện chưa có chuyến xe nào
+                Card(
+                    modifier = Modifier.fillMaxWidth(), // cho thẻ trạng thái rỗng phủ toàn chiều ngang
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White // dùng nền trắng giống các thẻ chuyến xe
+                    ),
+                    shape = RoundedCornerShape(14.dp) // bo góc thẻ trạng thái rỗng
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth() // cho nội dung phủ toàn chiều ngang
+                            .padding(20.dp), // tạo khoảng cách bên trong thẻ
+                        horizontalAlignment = Alignment.CenterHorizontally // căn giữa nội dung theo chiều ngang
+                    ) {
+                        Text(
+                            text = "Chưa có chuyến xe nào", // thông báo khi lịch sử đang rỗng
+                            color = HistoryBlue, // dùng màu xanh chính
+                            fontSize = 15.sp, // đặt cỡ chữ nội dung
+                            fontWeight = FontWeight.Bold // làm tiêu đề dễ nhìn
+                        )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(6.dp)) // cách tiêu đề với phần mô tả
+
+                        Text(
+                            text = "Các chuyến đã bắt đầu hoặc hoàn thành sẽ xuất hiện tại đây.", // hướng dẫn người dùng
+                            color = Color.Gray, // dùng màu phụ cho phần mô tả
+                            fontSize = 13.sp // đặt cỡ chữ mô tả
+                        )
+                    }
+                }
+            } else {
+                tripList.forEach { trip -> // hiển thị từng chuyến xe đã lưu trong Room
+                    TripHistoryCard(
+                        trip = trip // truyền dữ liệu chuyến vào thẻ nhật ký
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp)) // tạo khoảng cách giữa các thẻ chuyến
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
