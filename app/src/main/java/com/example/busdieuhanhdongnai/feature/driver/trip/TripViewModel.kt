@@ -7,6 +7,7 @@ import com.example.busdieuhanhdongnai.data.local.AppDatabase // gọi Room datab
 import com.example.busdieuhanhdongnai.data.local.TripEntity // dùng dữ liệu một chuyến xe
 import com.example.busdieuhanhdongnai.data.repository.TripRepository // gọi Repository
 import kotlinx.coroutines.launch // chạy tác vụ lưu dữ liệu
+import kotlinx.coroutines.flow.Flow // dùng để theo dõi chuyến đang thực hiện từ Room
 
 class TripViewModel(application: Application) : AndroidViewModel(application) { // ViewModel quản lý dữ liệu chuyến xe
 
@@ -15,7 +16,19 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
     )
 
     val allTrips = repository.allTrips // cung cấp danh sách lịch sử chuyến xe cho giao diện
-
+    fun getActiveTrip(
+        date: String, // ngày thực hiện chuyến cần tìm
+        route: String, // tuyến xe cần tìm
+        vehiclePlate: String, // biển số xe cần tìm
+        scheduledTime: String // khung giờ dự kiến cần tìm
+    ): Flow<TripEntity?> {
+        return repository.getActiveTrip(
+            date = date, // truyền ngày xuống Repository
+            route = route, // truyền tuyến xuống Repository
+            vehiclePlate = vehiclePlate, // truyền biển số xuống Repository
+            scheduledTime = scheduledTime // truyền giờ dự kiến xuống Repository
+        )
+    }
     fun saveTrip(
         date: String, // ngày thực hiện chuyến xe
         route: String, // tên tuyến xe
@@ -38,6 +51,25 @@ class TripViewModel(application: Application) : AndroidViewModel(application) { 
                     status = status, // gán trạng thái
                     note = note // gán ghi chú
                 )
+            )
+        }
+    }
+    fun updateTrip(
+        trip: TripEntity // nhận bản ghi chuyến đang thực hiện cần cập nhật
+    ) {
+        viewModelScope.launch { // chạy cập nhật Room trong coroutine
+            repository.updateTrip(
+                trip = trip // cập nhật đúng bản ghi dựa theo id
+            )
+        }
+    }
+
+    fun markOldActiveTripsAsIncomplete(
+        currentDate: String // nhận ngày hiện tại từ giao diện
+    ) {
+        viewModelScope.launch { // chạy cập nhật dữ liệu Room trong coroutine
+            repository.markOldActiveTripsAsIncomplete(
+                currentDate = currentDate // truyền ngày hiện tại xuống Repository
             )
         }
     }
