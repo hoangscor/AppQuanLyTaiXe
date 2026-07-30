@@ -29,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.LocalDate // lấy ngày hiện tại của thiết bị
+import java.time.format.DateTimeFormatter // định dạng ngày giống dữ liệu trong Room
 
 private val HistoryBlue = Color(0xFF0066CC) // màu xanh chính
 private val HistoryBackground = Color(0xFFF6F8FC) // màu nền màn hình
@@ -54,7 +56,9 @@ fun TripHistoryScreen(
     val roomTrips by tripViewModel.allTrips.collectAsState( // theo dõi dữ liệu Room thay đổi
         initial = emptyList() // lúc Room chưa trả dữ liệu thì dùng danh sách rỗng
     )
-
+    val todayDate = LocalDate.now().format( // lấy ngày hiện tại theo ngày của thiết bị
+        DateTimeFormatter.ofPattern("dd/MM/yyyy") // dùng đúng định dạng ngày đang lưu trong Room
+    )
     val tripList = roomTrips.map { trip -> // đổi dữ liệu Room sang dữ liệu giao diện
         TripHistoryItem(
             date = trip.date, // lấy ngày từ Room
@@ -72,7 +76,9 @@ fun TripHistoryScreen(
         )
     }
 
-
+    val todayTrips = tripList.filter { trip -> // tạo danh sách chỉ chứa chuyến của ngày hôm nay
+        trip.date == todayDate // giữ lại chuyến có ngày trùng với ngày hiện tại
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -129,14 +135,19 @@ fun TripHistoryScreen(
             ) {
                 HistorySummaryCard(
                     title = "Đã hoàn thành",
-                    value = "${tripList.count { it.status == "Đã hoàn thành" }} chuyến", // tự đếm chuyến xe hoàn thành nhé
+                    value = "${todayTrips.count { trip -> // đếm trong danh sách chuyến hôm nay
+                        trip.status == "Đã hoàn thành" // chỉ tính chuyến đã hoàn thành
+                    }} chuyến",
                     color = HistoryGreen,
                     modifier = Modifier.weight(1f)
                 )
 
                 HistorySummaryCard(
                     title = "Cần chú ý",
-                    value = "${tripList.count { it.status == "Chậm chuyến" }} chuyến", // tự đếm chuyến cần chú ý
+                    value = "${todayTrips.count { trip -> // đếm các chuyến hôm nay cần tài xế chú ý
+                        trip.status == "Chậm chuyến" || // tính chuyến bị chậm
+                                trip.status == "Chưa hoàn thành" // tính chuyến cũ hoặc chuyến bị bỏ dở
+                    }} chuyến",
                     color = HistoryOrange,
                     modifier = Modifier.weight(1f)
                 )
