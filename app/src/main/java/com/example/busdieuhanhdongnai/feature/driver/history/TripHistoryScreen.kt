@@ -41,6 +41,7 @@ data class TripHistoryItem( // dữ liệu một chuyến xe hiển thị trong 
     val date: String, // ngày thực hiện chuyến
     val route: String, // tên tuyến xe
     val vehiclePlate: String, // biển số xe thực hiện chuyến
+    val scheduledTime: String, // khung giờ dự kiến của chuyến xe
     val time: String, // thời gian chạy chuyến
     val passengers: String, // số lượng hành khách
     val status: String, // trạng thái chuyến xe
@@ -64,6 +65,7 @@ fun TripHistoryScreen(
             date = trip.date, // lấy ngày từ Room
             route = trip.route, // lấy tuyến từ Room
             vehiclePlate = trip.vehiclePlate, // lấy biển số xe từ Room
+            scheduledTime = trip.scheduledTime, // lấy khung giờ dự kiến đã lưu trong Room
             time = trip.time, // lấy thời gian từ Room
             passengers = "${trip.passengers} khách", // hiển thị số khách
             status = trip.status, // lấy trạng thái từ Room
@@ -241,7 +243,26 @@ fun TripHistoryCard(
                     fontSize = 13.sp
                 )
             }
+            if (trip.scheduledTime.isNotBlank()) { // chỉ hiện giờ dự kiến khi chuyến có dữ liệu
+                Spacer(modifier = Modifier.height(10.dp)) // cách phần biển số với giờ dự kiến
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(), // hàng phủ toàn chiều ngang
+                    horizontalArrangement = Arrangement.SpaceBetween // đẩy nhãn và giờ sang hai bên
+                ) {
+                    Text(
+                        text = "Giờ dự kiến", // nhãn khung giờ theo lịch trình
+                        color = Color.Gray, // dùng màu phụ cho nhãn
+                        fontSize = 13.sp // dùng cỡ chữ phụ
+                    )
+
+                    Text(
+                        text = trip.scheduledTime, // hiển thị khung giờ dự kiến từ Room
+                        fontSize = 13.sp, // dùng cỡ chữ nội dung
+                        fontWeight = FontWeight.Medium // làm giờ dự kiến dễ đọc hơn
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -270,7 +291,7 @@ fun TripHistoryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Thời gian",
+                    text = "Thời gian thực tế", // phân biệt với khung giờ dự kiến
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
