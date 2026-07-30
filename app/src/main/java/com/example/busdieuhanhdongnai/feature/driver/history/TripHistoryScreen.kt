@@ -321,22 +321,36 @@ fun TripHistoryCard(
                     fontWeight = FontWeight.Medium
                 )
             }
-            if (trip.note.isNotBlank()) { // chỉ hiện phần ghi chú khi chuyến có ghi chú
-                Spacer(modifier = Modifier.height(10.dp)) // tạo khoảng cách với dòng số khách
+            if (trip.note.isNotBlank()) { // chỉ hiện khung ghi chú khi chuyến có nội dung
+                Spacer(modifier = Modifier.height(12.dp)) // tạo khoảng cách với dòng số khách
 
-                Text(
-                    text = "Ghi chú", // nhãn của phần ghi chú
-                    color = Color.Gray, // dùng màu xám cho nhãn phụ
-                    fontSize = 13.sp // dùng cỡ chữ phụ
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(), // cho khung ghi chú phủ toàn chiều ngang
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFF3E0) // dùng nền cam nhạt để làm nổi bật sự cố
+                    ),
+                    shape = RoundedCornerShape(10.dp) // bo góc khung ghi chú
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp) // tạo khoảng cách nội dung bên trong khung
+                    ) {
+                        Text(
+                            text = "GHI CHÚ / SỰ CỐ", // tiêu đề của phần ghi chú chuyến xe
+                            color = HistoryOrange, // dùng màu cam cảnh báo
+                            fontSize = 13.sp, // dùng cỡ chữ phụ
+                            fontWeight = FontWeight.Bold // làm tiêu đề nổi bật
+                        )
 
-                Spacer(modifier = Modifier.height(4.dp)) // tạo khoảng cách nhỏ trước nội dung ghi chú
+                        Spacer(modifier = Modifier.height(6.dp)) // cách tiêu đề với nội dung ghi chú
 
-                Text(
-                    text = trip.note, // hiển thị ghi chú lấy từ Room
-                    fontSize = 13.sp, // dùng cỡ chữ nội dung
-                    fontWeight = FontWeight.Medium // làm nội dung ghi chú dễ đọc hơn
-                )
+                        Text(
+                            text = trip.note, // hiển thị nội dung ghi chú lấy từ Room
+                            color = Color(0xFF444444), // dùng màu chữ đậm để dễ đọc
+                            fontSize = 13.sp, // dùng cỡ chữ nội dung
+                            fontWeight = FontWeight.Medium // làm nội dung rõ hơn
+                        )
+                    }
+                }
             }
         }
     }
