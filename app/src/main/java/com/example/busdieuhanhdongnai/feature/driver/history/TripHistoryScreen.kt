@@ -19,6 +19,9 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState // đọc Flow Room thành state Compose
+import androidx.compose.runtime.mutableStateOf // tạo trạng thái bộ lọc có thể thay đổi
+import androidx.compose.runtime.saveable.rememberSaveable // giữ bộ lọc khi xoay màn hình
+import androidx.compose.runtime.setValue // cho phép cập nhật state bằng từ khóa by
 import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
 import androidx.lifecycle.viewmodel.compose.viewModel // lấy ViewModel trong Compose
 import com.example.busdieuhanhdongnai.feature.driver.trip.TripViewModel // ViewModel lưu và đọc chuyến xe
@@ -81,6 +84,23 @@ fun TripHistoryScreen(
     val todayTrips = tripList.filter { trip -> // tạo danh sách chỉ chứa chuyến của ngày hôm nay
         trip.date == todayDate // giữ lại chuyến có ngày trùng với ngày hiện tại
     }
+    var selectedHistoryFilter by rememberSaveable { // lưu lựa chọn bộ lọc hiện tại
+        mutableStateOf("Tất cả") // mặc định hiển thị toàn bộ lịch sử chuyến xe
+    }
+
+    val displayedTrips = when (selectedHistoryFilter) { // tạo danh sách theo bộ lọc được chọn
+        "Hoàn thành" -> tripList.filter { trip -> // chỉ lấy các chuyến đã hoàn thành
+            trip.status == "Đã hoàn thành" // kiểm tra đúng trạng thái đã hoàn thành
+        }
+
+        "Cần chú ý" -> tripList.filter { trip -> // chỉ lấy các chuyến có vấn đề cần kiểm tra
+            trip.status == "Chậm chuyến" || // giữ lại chuyến bị chậm
+                    trip.status == "Chưa hoàn thành" // giữ lại chuyến bị bỏ dở hoặc treo từ ngày cũ
+        }
+
+        else -> tripList // tab Tất cả hiển thị toàn bộ lịch sử
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -164,9 +184,44 @@ fun TripHistoryScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp)) // cách tiêu đề danh sách với bộ lọc
 
-            if (tripList.isEmpty()) { // kiểm tra Room hiện chưa có chuyến xe nào
+            Row(
+                modifier = Modifier.fillMaxWidth(), // cho hàng bộ lọc phủ toàn chiều ngang
+                horizontalArrangement = Arrangement.spacedBy(8.dp) // tạo khoảng cách đều giữa ba nút
+            ) {
+                HistoryFilterButton(
+                    title = "Tất cả", // tên bộ lọc hiển thị toàn bộ chuyến xe
+                    selected = selectedHistoryFilter == "Tất cả", // tô xanh khi đang chọn Tất cả
+                    modifier = Modifier.weight(1f), // cho nút chiếm một phần ba chiều ngang
+                    onClick = {
+                        selectedHistoryFilter = "Tất cả" // chuyển danh sách sang toàn bộ chuyến
+                    }
+                )
+
+                HistoryFilterButton(
+                    title = "Hoàn thành", // tên bộ lọc chuyến đã hoàn thành
+                    selected = selectedHistoryFilter == "Hoàn thành", // tô xanh khi đang chọn Hoàn thành
+                    modifier = Modifier.weight(1f), // cho nút chiếm một phần ba chiều ngang
+                    onClick = {
+                        selectedHistoryFilter = "Hoàn thành" // chỉ hiện chuyến đã hoàn thành
+                    }
+                )
+
+                HistoryFilterButton(
+                    title = "Cần chú ý", // tên bộ lọc chuyến có vấn đề
+                    selected = selectedHistoryFilter == "Cần chú ý", // tô xanh khi đang chọn Cần chú ý
+                    modifier = Modifier.weight(1f), // cho nút chiếm một phần ba chiều ngang
+                    onClick = {
+                        selectedHistoryFilter = "Cần chú ý" // chỉ hiện chuyến chậm hoặc chưa hoàn thành
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp)) // cách bộ lọc với danh sách chuyến xe
+
+
+            if (displayedTrips.isEmpty()) { // kiểm tra danh sách của bộ lọc hiện tại có rỗng hay không
                 Card(
                     modifier = Modifier.fillMaxWidth(), // cho thẻ trạng thái rỗng phủ toàn chiều ngang
                     colors = CardDefaults.cardColors(
@@ -197,7 +252,7 @@ fun TripHistoryScreen(
                     }
                 }
             } else {
-                tripList.forEach { trip -> // hiển thị từng chuyến xe đã lưu trong Room
+                displayedTrips.forEach { trip -> // hiển thị các chuyến phù hợp với bộ lọc hiện tại
                     TripHistoryCard(
                         trip = trip // truyền dữ liệu chuyến vào thẻ nhật ký
                     )
@@ -246,7 +301,44 @@ fun HistorySummaryCard(
         }
     }
 }
-
+@Composable
+fun HistoryFilterButton( // tạo một nút dùng chung cho bộ lọc Nhật ký
+    title: String, // chữ hiển thị trên nút
+    selected: Boolean, // xác định nút hiện có đang được chọn hay không
+    modifier: Modifier = Modifier, // nhận kích thước được truyền từ bên ngoài
+    onClick: () -> Unit // hành động khi tài xế bấm vào nút
+) {
+    Card(
+        onClick = onClick, // cập nhật bộ lọc khi người dùng bấm
+        modifier = modifier, // áp dụng kích thước nút từ hàng bên ngoài
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) { // kiểm tra nút đang được chọn
+                HistoryBlue // dùng nền xanh cho nút đang chọn
+            } else {
+                Color.White // dùng nền trắng cho nút chưa chọn
+            }
+        ),
+        shape = RoundedCornerShape(18.dp) // bo tròn góc nút bộ lọc
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth() // cho nội dung phủ toàn chiều ngang nút
+                .padding(vertical = 10.dp), // tạo chiều cao cho nút
+            horizontalAlignment = Alignment.CenterHorizontally // căn chữ giữa nút
+        ) {
+            Text(
+                text = title, // hiển thị tên bộ lọc
+                color = if (selected) { // đổi màu chữ theo trạng thái nút
+                    Color.White // chữ trắng khi nút đang được chọn
+                } else {
+                    HistoryBlue // chữ xanh khi nút chưa được chọn
+                },
+                fontSize = 13.sp, // đặt cỡ chữ vừa với ba nút
+                fontWeight = FontWeight.Bold // làm chữ nút nổi bật
+            )
+        }
+    }
+}
 @Composable
 fun TripHistoryCard(
     trip: TripHistoryItem
