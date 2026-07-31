@@ -12,9 +12,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase // thao tác SQL trực tiếp t
         TripEntity::class, // bảng dữ liệu chuyến xe
         IncidentEntity::class, // bảng báo cáo sự cố
         CheckInEntity::class, // bảng hành khách check-in
-        NotificationEntity::class // bảng thông báo
+        NotificationEntity::class, // bảng thông báo
+        CustomerEntity::class // bảng thống kê khách hàng và cơ cấu vé
     ],
-    version = 6, // tăng phiên bản vì thêm bảng notifications
+    version = 7, // tăng phiên bản vì thêm bảng customer_statistics
     exportSchema = false // chưa xuất file schema ở giai đoạn này
 )
 abstract class AppDatabase : RoomDatabase() { // database chính của ứng dụng
@@ -23,6 +24,7 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
     abstract fun incidentDao(): IncidentDao // cung cấp DAO để thao tác bảng incidents
     abstract fun checkInDao(): CheckInDao // cung cấp DAO thao tác bảng check_ins
     abstract fun notificationDao(): NotificationDao // cung cấp DAO thao tác bảng notifications
+    abstract fun customerDao(): CustomerDao // cung cấp DAO thao tác bảng thống kê khách hàng
     companion object { // nơi giữ một bản database duy nhất
         private val MIGRATION_1_2 = object : Migration(1, 2) { // chuyển database từ version 1 sang version 2
             override fun migrate(db: SupportSQLiteDatabase) { // chạy khi app đang có database cũ
@@ -100,6 +102,22 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                 ) // tạo bảng lưu thông báo
             }
         }
+        private val MIGRATION_6_7 = object : Migration(6, 7) { // nâng database từ version 6 lên version 7
+            override fun migrate(db: SupportSQLiteDatabase) { // chạy khi thiết bị đang có database version 6
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS customer_statistics (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        singleTicketCount INTEGER NOT NULL,
+                        monthlyTicketCount INTEGER NOT NULL,
+                        freeTicketCount INTEGER NOT NULL,
+                        workerSurveyCount INTEGER NOT NULL,
+                        studentSurveyCount INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                ) // tạo bảng lưu cơ cấu vé và dữ liệu khảo sát hành khách
+            }
+        }
 
         @Volatile // giúp các luồng đọc đúng dữ liệu mới nhất
         private var INSTANCE: AppDatabase? = null // biến lưu database đang dùng
@@ -115,7 +133,9 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                     MIGRATION_2_3, // thêm giờ dự kiến
                     MIGRATION_3_4, // thêm bảng báo cáo sự cố
                     MIGRATION_4_5, // thêm bảng hành khách check-in
-                    MIGRATION_5_6 // thêm bảng thông báo
+                    MIGRATION_5_6, // thêm bảng thông báo
+                    MIGRATION_6_7 // thêm bảng thống kê khách hàng và cơ cấu vé
+
                 )
                     .build() // hoàn tất tạo database
 
