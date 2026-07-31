@@ -28,6 +28,9 @@ import androidx.compose.material3.Text // hiển thị chữ
 import androidx.compose.material3.TextButton // tạo nút chữ quay lại
 import androidx.compose.runtime.Composable // đánh dấu hàm giao diện Compose
 import androidx.compose.runtime.getValue // đọc state bằng từ khóa by
+import androidx.compose.runtime.LaunchedEffect // đồng bộ dữ liệu Room vào các ô hiển thị
+import androidx.compose.runtime.collectAsState // chuyển Flow Room thành state của Compose
+import androidx.lifecycle.viewmodel.compose.viewModel // lấy CustomerViewModel trong màn hình Compose
 import androidx.compose.runtime.mutableStateOf // tạo state có thể thay đổi
 import androidx.compose.runtime.saveable.rememberSaveable // giữ state khi xoay màn hình
 import androidx.compose.runtime.setValue // cập nhật state bằng từ khóa by
@@ -48,7 +51,8 @@ private val CustomerLightOrange = Color(0xFFFFF3E0) // màu nền cam nhạt
 
 @Composable
 fun CustomerManagementScreen( // tạo màn quản lý khách hàng
-    onBack: () -> Unit = {} // nhận hành động quay lại màn trước
+    onBack: () -> Unit = {}, // nhận hành động quay lại màn trước
+    customerViewModel: CustomerViewModel = viewModel() // nhận ViewModel quản lý dữ liệu khách hàng
 ) {
     var isEditing by rememberSaveable { mutableStateOf(false) } // lưu trạng thái đang sửa dữ liệu
 
@@ -58,7 +62,19 @@ fun CustomerManagementScreen( // tạo màn quản lý khách hàng
 
     var workerSurveyCount by rememberSaveable { mutableStateOf("87") } // lưu số người thuộc nhóm công nhân khảo sát
     var studentSurveyCount by rememberSaveable { mutableStateOf("123") } // lưu số học sinh sinh viên khảo sát
+    val savedCustomerStatistics by customerViewModel.customerStatistics.collectAsState( // theo dõi dữ liệu Room
+        initial = null // dùng null trong lúc Room chưa trả dữ liệu
+    )
 
+    LaunchedEffect(savedCustomerStatistics) { // chạy lại khi dữ liệu Room thay đổi
+        savedCustomerStatistics?.let { customer -> // chỉ cập nhật khi Room đã có bản ghi
+            singleTicketCount = customer.singleTicketCount.toString() // lấy số vé lượt từ Room
+            monthlyTicketCount = customer.monthlyTicketCount.toString() // lấy số vé tháng từ Room
+            freeTicketCount = customer.freeTicketCount.toString() // lấy số vé miễn phí từ Room
+            workerSurveyCount = customer.workerSurveyCount.toString() // lấy khảo sát công nhân từ Room
+            studentSurveyCount = customer.studentSurveyCount.toString() // lấy khảo sát học sinh sinh viên từ Room
+        }
+    }
     val totalPassengerCount = // tính tổng số hành khách thực tế
         (singleTicketCount.toIntOrNull() ?: 0) + // cộng số khách vé lượt
                 (monthlyTicketCount.toIntOrNull() ?: 0) + // cộng số khách vé tháng
@@ -314,8 +330,20 @@ fun CustomerManagementScreen( // tạo màn quản lý khách hàng
             )
 
             Button( // tạo nút sửa hoặc lưu dữ liệu
-                onClick = { // xử lý khi bấm nút
-                    isEditing = !isEditing // chuyển đổi giữa chế độ xem và sửa
+                onClick = { // xử lý khi người dùng bấm nút
+                    if (isEditing) { // nếu đang ở chế độ nhập dữ liệu
+                        customerViewModel.saveCustomerStatistics( // yêu cầu ViewModel lưu dữ liệu vào Room
+                            singleTicketCount = singleTicketCount.toIntOrNull() ?: 0, // chuyển vé lượt thành số
+                            monthlyTicketCount = monthlyTicketCount.toIntOrNull() ?: 0, // chuyển vé tháng thành số
+                            freeTicketCount = freeTicketCount.toIntOrNull() ?: 0, // chuyển vé miễn phí thành số
+                            workerSurveyCount = workerSurveyCount.toIntOrNull() ?: 0, // chuyển khảo sát công nhân thành số
+                            studentSurveyCount = studentSurveyCount.toIntOrNull() ?: 0 // chuyển khảo sát học sinh thành số
+                        )
+
+                        isEditing = false // trở về chế độ xem sau khi gửi lệnh lưu
+                    } else { // nếu đang ở chế độ xem dữ liệu
+                        isEditing = true // chuyển sang chế độ chỉnh sửa
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth() // phủ toàn bộ chiều ngang
