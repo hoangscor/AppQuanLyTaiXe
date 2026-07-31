@@ -16,7 +16,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busdieuhanhdongnai.feature.auth.LoginScreen
+import com.example.busdieuhanhdongnai.feature.business.BusinessHomeScreen // màn trang chủ doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
+import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
 
 @Composable
 fun AppNavGraph() {
@@ -31,10 +33,17 @@ fun AppNavGraph() {
     ) {
         composable(Routes.LOGIN) {
             LoginScreen(
-                onLogin = {
-                    navController.navigate(Routes.DRIVER_HOME) {
-                        popUpTo(Routes.LOGIN) {
-                            inclusive = true
+                onDriverLogin = { // xử lý khi bấm đăng nhập tài xế
+                    navController.navigate(Routes.DRIVER_HOME) { // mở trang chủ tài xế
+                        popUpTo(Routes.LOGIN) { // xóa màn đăng nhập khỏi lịch sử
+                            inclusive = true // không cho quay lại bằng nút Back
+                        }
+                    }
+                },
+                onBusinessLogin = { // xử lý khi bấm đăng nhập doanh nghiệp
+                    navController.navigate(Routes.BUSINESS_HOME) { // mở trang chủ doanh nghiệp
+                        popUpTo(Routes.LOGIN) { // xóa màn đăng nhập khỏi lịch sử
+                            inclusive = true // không cho quay lại bằng nút Back
                         }
                     }
                 }
@@ -72,7 +81,27 @@ fun AppNavGraph() {
                 }
             )
         }
-
+        composable(Routes.BUSINESS_HOME) { // khai báo màn trang chủ doanh nghiệp
+            BusinessHomeScreen(
+                onOpenCustomers = { // xử lý khi doanh nghiệp mở chức năng khách hàng
+                    navController.navigate(Routes.BUSINESS_CUSTOMERS) // chuyển sang màn quản lý khách hàng
+                },
+                onLogout = { // xử lý khi doanh nghiệp đăng xuất
+                    navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
+                        popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
+                            inclusive = true // không cho quay lại trang doanh nghiệp bằng nút Back
+                        }
+                    }
+                }
+            )
+        }
+        composable(Routes.BUSINESS_CUSTOMERS) { // khai báo màn quản lý khách hàng
+            CustomerManagementScreen(
+                onBack = { // xử lý khi bấm nút quay lại
+                    navController.popBackStack() // quay về trang chủ doanh nghiệp
+                }
+            )
+        }
         composable(Routes.SCHEDULE) { // khai báo màn lịch trình
             ScheduleScreen(
                 onBack = {

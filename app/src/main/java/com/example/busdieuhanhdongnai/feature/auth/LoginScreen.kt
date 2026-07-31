@@ -30,11 +30,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val BusBlue = Color(0xFF0066CC)
-private val ScreenBackground = Color(0xFFF6F8FC)
+private val BusBlue = Color(0xFF0066CC) // màu xanh chính của ứng dụng
+private val BusinessGreen = Color(0xFF1A9B54) // màu nút đăng nhập doanh nghiệp
+private val ScreenBackground = Color(0xFFF6F8FC) // màu nền màn hình đăng nhập
 
 @Composable
-fun LoginScreen(onLogin: () -> Unit = {}) {
+fun LoginScreen(
+    onDriverLogin: () -> Unit = {}, // xử lý đăng nhập vào phân hệ tài xế
+    onBusinessLogin: () -> Unit = {} // xử lý đăng nhập vào phân hệ doanh nghiệp
+) {
     var account by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
 
@@ -93,22 +97,40 @@ fun LoginScreen(onLogin: () -> Unit = {}) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = onLogin,
+            onClick = onDriverLogin, // mở phân hệ tài xế
             modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
+                .fillMaxWidth() // cho nút phủ toàn chiều ngang
+                .height(52.dp), // đặt chiều cao nút
             colors = ButtonDefaults.buttonColors(
-                containerColor = BusBlue
+                containerColor = BusBlue // dùng màu xanh cho tài xế
             ),
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(10.dp) // bo góc nút
         ) {
             Text(
-                text = "ĐĂNG NHẬP",
-                fontWeight = FontWeight.Bold
+                text = "ĐĂNG NHẬP TÀI XẾ", // phân biệt nút đăng nhập tài xế
+                fontWeight = FontWeight.Bold // in đậm chữ nút
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp)) // cách hai nút đăng nhập
+
+        Button(
+            onClick = onBusinessLogin, // mở phân hệ doanh nghiệp
+            modifier = Modifier
+                .fillMaxWidth() // cho nút phủ toàn chiều ngang
+                .height(52.dp), // đặt chiều cao nút
+            colors = ButtonDefaults.buttonColors(
+                containerColor = BusinessGreen // dùng màu xanh lá cho doanh nghiệp
+            ),
+            shape = RoundedCornerShape(10.dp) // bo góc nút
+        ) {
+            Text(
+                text = "ĐĂNG NHẬP DOANH NGHIỆP", // tên nút phân hệ doanh nghiệp
+                fontWeight = FontWeight.Bold // in đậm chữ nút
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp)) // cách nút với quên mật khẩu
 
         TextButton(onClick = { }) {
             Text("Quên mật khẩu?")
