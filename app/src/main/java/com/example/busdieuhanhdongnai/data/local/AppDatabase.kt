@@ -13,9 +13,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase // thao tác SQL trực tiếp t
         IncidentEntity::class, // bảng báo cáo sự cố
         CheckInEntity::class, // bảng hành khách check-in
         NotificationEntity::class, // bảng thông báo
-        CustomerEntity::class // bảng thống kê khách hàng và cơ cấu vé
+        CustomerEntity::class, // bảng thống kê khách hàng và cơ cấu vé
+        BusinessVehicleEntity::class // bảng phương tiện của doanh nghiệp
     ],
-    version = 8, // tăng phiên bản vì thêm ngày thống kê khách hàng
+    version = 9, // tăng phiên bản vì thêm bảng phương tiện doanh nghiệp
     exportSchema = false // chưa xuất file schema ở giai đoạn này
 )
 abstract class AppDatabase : RoomDatabase() { // database chính của ứng dụng
@@ -25,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
     abstract fun checkInDao(): CheckInDao // cung cấp DAO thao tác bảng check_ins
     abstract fun notificationDao(): NotificationDao // cung cấp DAO thao tác bảng notifications
     abstract fun customerDao(): CustomerDao // cung cấp DAO thao tác bảng thống kê khách hàng
+    abstract fun businessVehicleDao(): BusinessVehicleDao // cung cấp DAO thao tác bảng phương tiện doanh nghiệp
     companion object { // nơi giữ một bản database duy nhất
         private val MIGRATION_1_2 = object : Migration(1, 2) { // chuyển database từ version 1 sang version 2
             override fun migrate(db: SupportSQLiteDatabase) { // chạy khi app đang có database cũ
@@ -133,6 +135,30 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                 ) // kết thúc lệnh tạo chỉ mục
             } // kết thúc quá trình migration
         } // kết thúc MIGRATION_7_8
+        private val MIGRATION_8_9 = object : Migration(8, 9) { // nâng database từ version 8 lên version 9
+            override fun migrate(db: SupportSQLiteDatabase) { // chạy khi thiết bị đang có database version 8
+
+                db.execSQL( // tạo bảng lưu phương tiện của doanh nghiệp
+                    """
+            CREATE TABLE IF NOT EXISTS business_vehicles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                plateNumber TEXT NOT NULL,
+                vehicleType TEXT NOT NULL,
+                driverName TEXT NOT NULL,
+                maintenanceDate TEXT NOT NULL,
+                status TEXT NOT NULL
+            )
+            """.trimIndent()
+                ) // kết thúc lệnh tạo bảng phương tiện
+
+                db.execSQL( // tạo chỉ mục duy nhất cho biển số xe
+                    """
+            CREATE UNIQUE INDEX IF NOT EXISTS index_business_vehicles_plateNumber
+            ON business_vehicles (plateNumber)
+            """.trimIndent()
+                ) // ngăn hai phương tiện có cùng biển số
+            }
+        }
         @Volatile // giúp các luồng đọc đúng dữ liệu mới nhất
         private var INSTANCE: AppDatabase? = null // biến lưu database đang dùng
 
@@ -149,7 +175,8 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                     MIGRATION_4_5, // thêm bảng hành khách check-in
                     MIGRATION_5_6, // thêm bảng thông báo
                     MIGRATION_6_7, // thêm bảng thống kê khách hàng và cơ cấu vé
-                    MIGRATION_7_8 // thêm ngày cho từng bản thống kê khách hàng
+                    MIGRATION_7_8, // thêm ngày cho từng bản thống kê khách hàng
+                    MIGRATION_8_9 // thêm bảng phương tiện doanh nghiệp
 
                 )
                     .build() // hoàn tất tạo database
