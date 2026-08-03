@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busdieuhanhdongnai.feature.auth.LoginScreen
 import com.example.busdieuhanhdongnai.feature.business.BusinessHomeScreen // màn trang chủ doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.vehicle.VehicleManagementScreen // màn quản lý phương tiện doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
 
@@ -86,6 +87,9 @@ fun AppNavGraph() {
                 onOpenCustomers = { // xử lý khi doanh nghiệp mở chức năng khách hàng
                     navController.navigate(Routes.BUSINESS_CUSTOMERS) // chuyển sang màn quản lý khách hàng
                 },
+                onOpenVehicles = { // xử lý khi doanh nghiệp bấm Quản lý phương tiện
+                    navController.navigate(Routes.BUSINESS_VEHICLES) // chuyển sang màn quản lý phương tiện
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -97,6 +101,13 @@ fun AppNavGraph() {
         }
         composable(Routes.BUSINESS_CUSTOMERS) { // khai báo màn quản lý khách hàng
             CustomerManagementScreen(
+                onBack = { // xử lý khi bấm nút quay lại
+                    navController.popBackStack() // quay về trang chủ doanh nghiệp
+                }
+            )
+        }
+        composable(Routes.BUSINESS_VEHICLES) { // khai báo màn quản lý phương tiện doanh nghiệp
+            VehicleManagementScreen(
                 onBack = { // xử lý khi bấm nút quay lại
                     navController.popBackStack() // quay về trang chủ doanh nghiệp
                 }

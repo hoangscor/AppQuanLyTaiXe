@@ -13,4 +13,6 @@ object Routes {
     const val BUSINESS_HOME = "business_home" // màn trang chủ dành cho doanh nghiệp
     const val BUSINESS_CUSTOMERS = "business_customers" // màn quản lý khách hàng và vé
 
+    const val BUSINESS_VEHICLES = "business_vehicles" // màn quản lý phương tiện của doanh nghiệp
+
 }
