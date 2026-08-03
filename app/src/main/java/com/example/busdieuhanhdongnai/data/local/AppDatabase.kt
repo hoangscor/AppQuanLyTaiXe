@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase // thao tác SQL trực tiếp t
         NotificationEntity::class, // bảng thông báo
         CustomerEntity::class // bảng thống kê khách hàng và cơ cấu vé
     ],
-    version = 7, // tăng phiên bản vì thêm bảng customer_statistics
+    version = 8, // tăng phiên bản vì thêm ngày thống kê khách hàng
     exportSchema = false // chưa xuất file schema ở giai đoạn này
 )
 abstract class AppDatabase : RoomDatabase() { // database chính của ứng dụng
@@ -118,7 +118,21 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                 ) // tạo bảng lưu cơ cấu vé và dữ liệu khảo sát hành khách
             }
         }
+        private val MIGRATION_7_8 = object : Migration(7, 8) { // nâng database từ version 7 lên version 8
+            override fun migrate(db: SupportSQLiteDatabase) { // chạy khi thiết bị đang dùng database version 7
+                db.execSQL( // thực hiện lệnh thêm cột ngày thống kê
+                    "ALTER TABLE customer_statistics ADD COLUMN recordDate TEXT NOT NULL DEFAULT ''" // thêm ngày vào bảng cũ
+                ) // kết thúc lệnh thêm cột
 
+                db.execSQL( // cập nhật ngày cho bản ghi cũ đang có trong máy
+                    "UPDATE customer_statistics SET recordDate = strftime('%Y-%m-%d','now','localtime') WHERE recordDate = ''" // gán ngày hiện tại cho dữ liệu cũ
+                ) // kết thúc lệnh cập nhật ngày
+
+                db.execSQL( // tạo chỉ mục để một ngày không bị lưu nhiều bản
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_customer_statistics_recordDate ON customer_statistics(recordDate)" // ngăn trùng ngày thống kê
+                ) // kết thúc lệnh tạo chỉ mục
+            } // kết thúc quá trình migration
+        } // kết thúc MIGRATION_7_8
         @Volatile // giúp các luồng đọc đúng dữ liệu mới nhất
         private var INSTANCE: AppDatabase? = null // biến lưu database đang dùng
 
@@ -134,7 +148,8 @@ abstract class AppDatabase : RoomDatabase() { // database chính của ứng d�
                     MIGRATION_3_4, // thêm bảng báo cáo sự cố
                     MIGRATION_4_5, // thêm bảng hành khách check-in
                     MIGRATION_5_6, // thêm bảng thông báo
-                    MIGRATION_6_7 // thêm bảng thống kê khách hàng và cơ cấu vé
+                    MIGRATION_6_7, // thêm bảng thống kê khách hàng và cơ cấu vé
+                    MIGRATION_7_8 // thêm ngày cho từng bản thống kê khách hàng
 
                 )
                     .build() // hoàn tất tạo database

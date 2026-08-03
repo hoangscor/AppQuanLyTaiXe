@@ -1,6 +1,7 @@
 package com.example.busdieuhanhdongnai.feature.business.customer // đặt file trong phần khách hàng doanh nghiệp
 
 import androidx.compose.foundation.background // tạo màu nền màn hình
+import androidx.compose.foundation.horizontalScroll // cho phép hàng nút bộ lọc cuộn ngang khi không đủ chỗ
 import androidx.compose.foundation.layout.Arrangement // sắp xếp khoảng cách các thành phần
 import androidx.compose.foundation.layout.Column // xếp thành phần theo chiều dọc
 import androidx.compose.foundation.layout.Row // xếp thành phần theo chiều ngang
@@ -41,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight // điều chỉnh độ đậm 
 import androidx.compose.ui.text.input.KeyboardType // chọn kiểu bàn phím số
 import androidx.compose.ui.unit.dp // đơn vị kích thước giao diện
 import androidx.compose.ui.unit.sp // đơn vị kích thước chữ
-
+import java.time.LocalDate // kiểm tra ngày nhập có đúng định dạng yyyy-MM-dd hay không
 private val CustomerBlue = Color(0xFF0066CC) // màu xanh chính của ứng dụng
 private val CustomerGreen = Color(0xFF1A9B54) // màu xanh cho số liệu tốt
 private val CustomerOrange = Color(0xFFFF9800) // màu cam cho dữ liệu khảo sát
@@ -65,7 +66,25 @@ fun CustomerManagementScreen( // tạo màn quản lý khách hàng
     val savedCustomerStatistics by customerViewModel.customerStatistics.collectAsState( // theo dõi dữ liệu Room
         initial = null // dùng null trong lúc Room chưa trả dữ liệu
     )
+    val selectedPeriodFilter by customerViewModel.selectedFilter.collectAsState() // đọc loại khoảng thời gian đang được chọn
 
+    val selectedStartDate by customerViewModel.startDate.collectAsState() // đọc ngày bắt đầu của khoảng thống kê
+
+    val selectedEndDate by customerViewModel.endDate.collectAsState() // đọc ngày kết thúc của khoảng thống kê
+    var showCustomRangeEditor by rememberSaveable {
+        mutableStateOf(false)
+    } // kiểm soát việc hiện hoặc ẩn khu vực nhập khoảng ngày
+
+    var customStartDate by rememberSaveable {
+        mutableStateOf(selectedStartDate)
+    } // lưu ngày bắt đầu do doanh nghiệp nhập
+
+    var customEndDate by rememberSaveable {
+        mutableStateOf(selectedEndDate)
+    } // lưu ngày kết thúc do doanh nghiệp nhập
+    var customRangeError by rememberSaveable {
+        mutableStateOf("")
+    } // lưu nội dung lỗi khi khoảng ngày không hợp lệ
     LaunchedEffect(savedCustomerStatistics) { // chạy lại khi dữ liệu Room thay đổi
         savedCustomerStatistics?.let { customer -> // chỉ cập nhật khi Room đã có bản ghi
             singleTicketCount = customer.singleTicketCount.toString() // lấy số vé lượt từ Room
@@ -142,6 +161,169 @@ fun CustomerManagementScreen( // tạo màn quản lý khách hàng
                 .fillMaxWidth() // phủ toàn bộ chiều ngang
                 .padding(20.dp) // tạo lề quanh nội dung
         ) {
+            Text( // hiển thị tiêu đề khu vực lọc thời gian
+                text = "THỜI GIAN THỐNG KÊ", // tên khu vực lựa chọn thời gian
+                color = CustomerBlue, // dùng màu xanh chính của màn khách hàng
+                fontSize = 17.sp, // đặt kích thước tiêu đề
+                fontWeight = FontWeight.Bold // in đậm tiêu đề
+            )
+
+            Spacer( // tạo khoảng cách giữa tiêu đề và các nút
+                modifier = Modifier.height(10.dp) // đặt khoảng cách dọc
+            )
+
+            Row( // xếp các nút lọc theo chiều ngang
+                modifier = Modifier
+                    .fillMaxWidth() // cho hàng nút phủ toàn bộ chiều ngang
+                    .horizontalScroll(rememberScrollState()), // cho phép cuộn ngang khi màn hình không đủ chỗ
+                horizontalArrangement = Arrangement.spacedBy(8.dp) // tạo khoảng cách đều giữa các nút
+            ) {
+                CustomerPeriodFilterButton( // tạo nút lọc hôm nay
+                    title = "Hôm nay", // chữ hiển thị trên nút
+                    selected = selectedPeriodFilter == CustomerPeriodFilter.TODAY, // kiểm tra nút hôm nay đang được chọn
+                    onClick = {
+                        customerViewModel.selectToday() // chuyển dữ liệu sang ngày hôm nay
+                    }
+                )
+
+                CustomerPeriodFilterButton( // tạo nút lọc 7 ngày
+                    title = "7 ngày", // chữ hiển thị trên nút
+                    selected = selectedPeriodFilter == CustomerPeriodFilter.LAST_7_DAYS, // kiểm tra bộ lọc 7 ngày
+                    onClick = {
+                        customerViewModel.selectLast7Days() // lấy dữ liệu trong 7 ngày gần nhất
+                    }
+                )
+
+                CustomerPeriodFilterButton( // tạo nút lọc 30 ngày
+                    title = "30 ngày", // chữ hiển thị trên nút
+                    selected = selectedPeriodFilter == CustomerPeriodFilter.LAST_30_DAYS, // kiểm tra bộ lọc 30 ngày
+                    onClick = {
+                        customerViewModel.selectLast30Days() // lấy dữ liệu trong 30 ngày gần nhất
+                    }
+                )
+
+                CustomerPeriodFilterButton( // tạo nút lọc một năm
+                    title = "1 năm", // chữ hiển thị trên nút
+                    selected = selectedPeriodFilter == CustomerPeriodFilter.LAST_1_YEAR, // kiểm tra bộ lọc một năm
+                    onClick = {
+                        customerViewModel.selectLast1Year() // lấy dữ liệu trong một năm gần nhất
+                    }
+                )
+
+                CustomerPeriodFilterButton( // tạo nút mở phần chọn khoảng ngày
+                    title = "Tùy chọn", // tên nút lọc tùy chỉnh
+                    selected = selectedPeriodFilter == CustomerPeriodFilter.CUSTOM, // tô xanh khi đang dùng khoảng tùy chỉnh
+                    onClick = {
+                        customStartDate = selectedStartDate // đưa ngày hiện tại vào ô ngày bắt đầu
+                        customEndDate = selectedEndDate // đưa ngày hiện tại vào ô ngày kết thúc
+                        showCustomRangeEditor = true // mở khu vực nhập khoảng ngày
+                    }
+                )
+            }
+
+            if (showCustomRangeEditor) { // chỉ hiện khu vực nhập khi người dùng bấm Tùy chọn
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                ) // tạo khoảng cách với hàng nút bộ lọc
+
+                OutlinedTextField(
+                    value = customStartDate, // hiển thị ngày bắt đầu đang nhập
+                    onValueChange = {
+                        customStartDate = it
+                    }, // cập nhật ngày bắt đầu
+                    label = {
+                        Text("Từ ngày: yyyy-MM-dd")
+                    }, // hướng dẫn đúng định dạng ngày
+                    modifier = Modifier.fillMaxWidth(), // cho ô nhập phủ toàn bộ chiều ngang
+                    singleLine = true // chỉ nhập trên một dòng
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                ) // tạo khoảng cách giữa hai ô ngày
+
+                OutlinedTextField(
+                    value = customEndDate, // hiển thị ngày kết thúc đang nhập
+                    onValueChange = {
+                        customEndDate = it
+                    }, // cập nhật ngày kết thúc
+                    label = {
+                        Text("Đến ngày: yyyy-MM-dd")
+                    }, // hướng dẫn đúng định dạng ngày
+                    modifier = Modifier.fillMaxWidth(), // cho ô nhập phủ toàn bộ chiều ngang
+                    singleLine = true // chỉ nhập trên một dòng
+                )
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                ) // tạo khoảng cách đến nút áp dụng
+                if (customRangeError.isNotEmpty()) { // chỉ hiển thị khi khoảng ngày có lỗi
+                    Text(
+                        text = customRangeError, // hiển thị nội dung lỗi đã kiểm tra
+                        color = Color.Red, // dùng màu đỏ để cảnh báo người dùng
+                        fontSize = 13.sp, // đặt kích thước chữ thông báo
+                        modifier = Modifier.padding(bottom = 10.dp) // cách thông báo với nút áp dụng
+                    )
+                }
+                Button(
+                    onClick = { // kiểm tra hai ngày trước khi áp dụng bộ lọc
+                        val cleanedStartDate = customStartDate.trim() // loại bỏ khoảng trắng ở ngày bắt đầu
+                        val cleanedEndDate = customEndDate.trim() // loại bỏ khoảng trắng ở ngày kết thúc
+
+                        val parsedStartDate = runCatching { // thử chuyển chuỗi ngày bắt đầu thành LocalDate
+                            LocalDate.parse(cleanedStartDate) // đọc ngày theo định dạng yyyy-MM-dd
+                        }.getOrNull() // trả về null nếu ngày bắt đầu sai định dạng
+
+                        val parsedEndDate = runCatching { // thử chuyển chuỗi ngày kết thúc thành LocalDate
+                            LocalDate.parse(cleanedEndDate) // đọc ngày theo định dạng yyyy-MM-dd
+                        }.getOrNull() // trả về null nếu ngày kết thúc sai định dạng
+
+                        when { // kiểm tra lần lượt từng trường hợp lỗi
+                            parsedStartDate == null || parsedEndDate == null -> {
+                                customRangeError = "Ngày phải đúng định dạng yyyy-MM-dd" // báo lỗi sai định dạng ngày
+                            }
+
+                            parsedStartDate.isAfter(parsedEndDate) -> {
+                                customRangeError =
+                                    "Ngày bắt đầu không được lớn hơn ngày kết thúc" // báo lỗi sai thứ tự ngày
+                            }
+
+                            else -> {
+                                customRangeError = "" // xóa thông báo lỗi cũ khi hai ngày hợp lệ
+
+                                customerViewModel.selectCustomRange(
+                                    startDate = cleanedStartDate, // áp dụng ngày bắt đầu đã kiểm tra
+                                    endDate = cleanedEndDate // áp dụng ngày kết thúc đã kiểm tra
+                                )
+
+                                showCustomRangeEditor = false // đóng vùng nhập khoảng ngày sau khi áp dụng thành công
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(), // nút phủ toàn bộ chiều ngang
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = CustomerBlue // sử dụng màu xanh chính
+                    )
+                ) {
+                    Text(
+                        text = "ÁP DỤNG KHOẢNG NGÀY", // tên thao tác
+                        fontWeight = FontWeight.Bold // làm chữ nổi bật
+                    )
+                }
+            }
+            Spacer( // tạo khoảng cách đến dòng ngày thống kê
+                modifier = Modifier.height(10.dp) // đặt khoảng cách dọc
+            )
+
+            Text( // hiển thị khoảng ngày hiện đang áp dụng
+                text = "Từ $selectedStartDate đến $selectedEndDate", // ghép ngày bắt đầu và ngày kết thúc
+                color = Color.Gray, // dùng màu chữ phụ
+                fontSize = 13.sp // đặt kích thước chữ ngày
+            )
+
+            Spacer( // tạo khoảng cách trước phần tổng quan hành khách
+                modifier = Modifier.height(20.dp) // đặt khoảng cách dọc
+            )
             Text( // hiển thị tiêu đề tổng quan
                 text = "TỔNG QUAN HÀNH KHÁCH", // tên khu vực tổng quan
                 color = CustomerBlue, // dùng màu xanh chính
@@ -501,4 +683,34 @@ private fun CustomerNumberEditor( // tạo ô chỉnh sửa dữ liệu số
         ),
         shape = RoundedCornerShape(12.dp) // bo tròn góc ô nhập
     )
+}
+@Composable
+private fun CustomerPeriodFilterButton( // tạo nút dùng chung cho các lựa chọn thời gian
+    title: String, // chữ hiển thị trên nút
+    selected: Boolean, // xác định nút hiện có đang được chọn hay không
+    onClick: () -> Unit // hành động khi người dùng bấm nút
+) {
+    Button(
+        onClick = onClick, // gọi chức năng thay đổi khoảng thời gian
+        modifier = Modifier.height(40.dp), // đặt chiều cao đồng đều cho các nút
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (selected) { // kiểm tra trạng thái đang chọn
+                CustomerBlue // dùng nền xanh cho nút đang chọn
+            } else {
+                Color.White // dùng nền trắng cho nút chưa chọn
+            },
+            contentColor = if (selected) { // kiểm tra màu chữ theo trạng thái
+                Color.White // chữ trắng khi nút đang được chọn
+            } else {
+                CustomerBlue // chữ xanh khi nút chưa được chọn
+            }
+        ),
+        shape = RoundedCornerShape(18.dp) // bo tròn góc của nút bộ lọc
+    ) {
+        Text(
+            text = title, // hiển thị tên khoảng thời gian
+            fontSize = 13.sp, // đặt cỡ chữ vừa với hàng nút
+            fontWeight = FontWeight.Bold // làm chữ nút nổi bật
+        )
+    }
 }
