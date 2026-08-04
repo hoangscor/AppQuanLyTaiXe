@@ -2,6 +2,7 @@ package com.example.busdieuhanhdongnai.feature.business.vehicle // đặt màn h
 
 import androidx.compose.foundation.background // tạo màu nền màn hình
 import androidx.compose.foundation.layout.Arrangement // sắp xếp khoảng cách các thành phần
+import androidx.compose.foundation.layout.Box // làm vùng neo cho danh sách lựa chọn trạng thái
 import androidx.compose.foundation.layout.Column // xếp nội dung theo chiều dọc
 import androidx.compose.foundation.layout.Row // xếp nội dung theo chiều ngang
 import androidx.compose.foundation.layout.Spacer // tạo khoảng cách
@@ -22,6 +23,9 @@ import androidx.compose.material3.Card // tạo thẻ giao diện
 import androidx.compose.material3.CardDefaults // thiết lập màu nền cho thẻ
 import androidx.compose.material3.Button // tạo nút thêm phương tiện
 import androidx.compose.material3.ButtonDefaults // thiết lập màu sắc cho nút thêm phương tiện
+import androidx.compose.material3.DropdownMenu // hiển thị danh sách trạng thái phương tiện
+import androidx.compose.material3.DropdownMenuItem // tạo từng lựa chọn trạng thái
+import androidx.compose.material3.OutlinedButton // tạo nút chọn trạng thái có đường viền
 import androidx.compose.material3.OutlinedTextField // tạo ô tìm kiếm phương tiện
 import androidx.compose.material3.Text // hiển thị chữ
 import androidx.compose.material3.TextButton // tạo nút quay lại
@@ -74,6 +78,15 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
     var newVehicleStatus by rememberSaveable { // lưu trạng thái phương tiện đang nhập
         mutableStateOf("Hoạt động") // mặc định phương tiện có trạng thái Hoạt động
     }
+    var statusMenuExpanded by rememberSaveable { // lưu trạng thái mở hoặc đóng danh sách trạng thái
+        mutableStateOf(false) // mặc định chưa mở danh sách lựa chọn trạng thái
+    }
+
+    val vehicleStatusOptions = listOf( // tạo danh sách trạng thái hợp lệ của phương tiện
+        "Hoạt động", // phương tiện đang vận hành bình thường
+        "Bảo trì", // phương tiện đang được kiểm tra hoặc sửa chữa
+        "Tạm dừng" // phương tiện đang ngừng vận hành tạm thời
+    )
     var vehicleFormError by rememberSaveable { // lưu nội dung lỗi của form thêm phương tiện
         mutableStateOf("") // mặc định chưa có thông báo lỗi
     }
@@ -284,8 +297,16 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
             )
 
             Button( // tạo nút mở form thêm phương tiện
-                onClick = {
-                    showAddVehicleForm = true // ghi nhận yêu cầu mở form thêm phương tiện
+                onClick = { // xử lý khi người dùng bấm nút thêm phương tiện
+                    editingVehicleId = null // xác định đây là thao tác thêm mới, không phải chỉnh sửa
+                    newVehiclePlateNumber = "" // xóa biển số còn sót lại từ lần nhập trước
+                    newVehicleType = "" // xóa loại xe còn sót lại từ lần nhập trước
+                    newVehicleDriverName = "" // xóa tên tài xế còn sót lại từ lần nhập trước
+                    newVehicleMaintenanceDate = "" // xóa ngày bảo trì còn sót lại từ lần nhập trước
+                    newVehicleStatus = "Hoạt động" // đưa trạng thái mới về giá trị mặc định
+                    vehicleFormError = "" // xóa thông báo lỗi cũ của form
+                    statusMenuExpanded = false // bảo đảm danh sách trạng thái đang đóng
+                    showAddVehicleForm = true // mở form thêm phương tiện mới
                 },
                 modifier = Modifier.fillMaxWidth(), // cho nút phủ toàn bộ chiều ngang
                 colors = ButtonDefaults.buttonColors(
@@ -397,20 +418,59 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
                             modifier = Modifier.height(10.dp) // đặt khoảng cách dọc
                         ) // kết thúc khoảng cách
 
-                        OutlinedTextField( // tạo ô nhập trạng thái phương tiện
-                            value = newVehicleStatus, // hiển thị trạng thái đang nhập
-                            onValueChange = { newValue -> // nhận trạng thái mới khi người dùng nhập
-                                newVehicleStatus = newValue // lưu trạng thái mới vào state
-                            }, // kết thúc xử lý thay đổi trạng thái
-                            modifier = Modifier.fillMaxWidth(), // cho ô trạng thái phủ toàn bộ chiều ngang
-                            label = { // tạo nhãn hướng dẫn cho ô trạng thái
-                                Text( // hiển thị nội dung nhãn trạng thái
-                                    text = "Trạng thái: Hoạt động / Bảo trì / Tạm dừng" // hướng dẫn trạng thái hợp lệ
-                                ) // kết thúc nội dung nhãn trạng thái
-                            }, // kết thúc nhãn trạng thái
-                            singleLine = true, // chỉ cho phép nhập trạng thái trên một dòng
-                            shape = RoundedCornerShape(14.dp) // bo tròn góc ô trạng thái
-                        ) // kết thúc ô nhập trạng thái
+                        Box( // tạo vùng neo cho nút và danh sách lựa chọn trạng thái
+                            modifier = Modifier.fillMaxWidth() // cho vùng lựa chọn phủ toàn bộ chiều ngang form
+                        ) {
+                            OutlinedButton( // tạo nút hiển thị trạng thái hiện tại
+                                onClick = { // xử lý khi người dùng bấm nút chọn trạng thái
+                                    statusMenuExpanded = true // mở danh sách các trạng thái hợp lệ
+                                },
+                                modifier = Modifier.fillMaxWidth(), // cho nút chọn trạng thái phủ toàn bộ chiều ngang
+                                shape = RoundedCornerShape(14.dp) // bo tròn góc nút chọn trạng thái
+                            ) {
+                                Row( // xếp tên trạng thái và biểu tượng mở danh sách theo chiều ngang
+                                    modifier = Modifier.fillMaxWidth(), // cho nội dung nút phủ toàn bộ chiều ngang
+                                    horizontalArrangement = Arrangement.SpaceBetween, // đẩy trạng thái và mũi tên sang hai phía
+                                    verticalAlignment = Alignment.CenterVertically // căn giữa nội dung theo chiều dọc
+                                ) {
+                                    Text( // hiển thị trạng thái phương tiện đang được chọn
+                                        text = "Trạng thái: $newVehicleStatus", // ghép nhãn với trạng thái hiện tại
+                                        color = Color.DarkGray, // dùng màu xám đậm cho nội dung
+                                        fontSize = 14.sp // đặt kích thước chữ trạng thái
+                                    )
+
+                                    Text( // hiển thị biểu tượng mở danh sách
+                                        text = "▼", // dùng mũi tên hướng xuống
+                                        color = VehicleBlue, // dùng màu xanh chính của ứng dụng
+                                        fontSize = 13.sp // đặt kích thước biểu tượng
+                                    )
+                                }
+                            }
+
+                            DropdownMenu( // tạo danh sách các trạng thái được phép sử dụng
+                                expanded = statusMenuExpanded, // chỉ hiển thị khi trạng thái mở bằng true
+                                onDismissRequest = { // xử lý khi người dùng bấm ra ngoài danh sách
+                                    statusMenuExpanded = false // đóng danh sách trạng thái
+                                },
+                                modifier = Modifier.fillMaxWidth() // cho danh sách rộng bằng vùng chọn trạng thái
+                            ) {
+                                vehicleStatusOptions.forEach { statusOption -> // lần lượt tạo từng lựa chọn trạng thái
+                                    DropdownMenuItem( // tạo một dòng lựa chọn trong danh sách
+                                        text = { // tạo nội dung chữ của lựa chọn
+                                            Text( // hiển thị tên trạng thái
+                                                text = statusOption, // lấy trạng thái hiện tại trong danh sách
+                                                fontSize = 14.sp // đặt kích thước chữ lựa chọn
+                                            )
+                                        },
+                                        onClick = { // xử lý khi người dùng chọn một trạng thái
+                                            newVehicleStatus = statusOption // lưu trạng thái được chọn vào form
+                                            statusMenuExpanded = false // đóng danh sách sau khi chọn
+                                            vehicleFormError = "" // xóa thông báo lỗi cũ của form
+                                        }
+                                    )
+                                }
+                            }
+                        }
                         Spacer( // tạo khoảng cách giữa ô trạng thái và thông báo lỗi
                             modifier = Modifier.height(10.dp) // đặt khoảng cách dọc
                         )
