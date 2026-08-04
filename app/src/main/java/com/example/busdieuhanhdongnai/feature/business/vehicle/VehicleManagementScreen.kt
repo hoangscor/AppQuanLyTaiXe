@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding // đẩy nội du
 import androidx.compose.foundation.rememberScrollState // ghi nhớ vị trí cuộn của màn hình
 import androidx.compose.foundation.shape.RoundedCornerShape // bo tròn góc các thành phần
 import androidx.compose.foundation.verticalScroll // cho phép nội dung màn hình cuộn dọc
+import androidx.compose.material3.AlertDialog // tạo hộp thoại xác nhận trước khi xóa phương tiện
 import androidx.compose.material3.Card // tạo thẻ giao diện
 import androidx.compose.material3.CardDefaults // thiết lập màu nền cho thẻ
-
 import androidx.compose.material3.Button // tạo nút thêm phương tiện
 import androidx.compose.material3.ButtonDefaults // thiết lập màu sắc cho nút thêm phương tiện
 import androidx.compose.material3.OutlinedTextField // tạo ô tìm kiếm phương tiện
@@ -77,6 +77,11 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
     var vehicleFormError by rememberSaveable { // lưu nội dung lỗi của form thêm phương tiện
         mutableStateOf("") // mặc định chưa có thông báo lỗi
     }
+
+    var deletingVehicleId by rememberSaveable { // lưu id của phương tiện đang chờ người dùng xác nhận xóa
+        mutableStateOf<Int?>(null) // null nghĩa là hiện tại chưa có phương tiện nào chờ xóa
+    }
+
     val vehicleSearchQuery by businessVehicleViewModel.searchQuery.collectAsState() // đọc từ khóa tìm kiếm từ ViewModel
     val filteredBusinessVehicles by businessVehicleViewModel.filteredVehicles.collectAsState() // đọc danh sách xe đã lọc từ Room
     val allBusinessVehicles by businessVehicleViewModel.allVehicles.collectAsState() // đọc toàn bộ xe từ Room
@@ -91,6 +96,58 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
 
     val stoppedVehicleCount = allBusinessVehicles.count { vehicle -> // đếm xe đang tạm dừng
         vehicle.status == "Tạm dừng" // chỉ lấy xe có trạng thái Tạm dừng
+    }
+
+    val vehiclePendingDelete = allBusinessVehicles.firstOrNull { vehicle -> // tìm phương tiện tương ứng với id đang chờ xóa
+        vehicle.id == deletingVehicleId // chỉ lấy phương tiện có đúng id người dùng đã chọn
+    }
+
+    vehiclePendingDelete?.let { vehicleToDelete -> // chỉ hiện hộp thoại khi đã có phương tiện được chọn để xóa
+        AlertDialog( // tạo hộp thoại yêu cầu xác nhận xóa phương tiện
+            onDismissRequest = { // xử lý khi người dùng bấm ra ngoài hộp thoại hoặc nút quay lại
+                deletingVehicleId = null // hủy trạng thái chờ xóa và đóng hộp thoại
+            },
+            title = { // tạo phần tiêu đề của hộp thoại
+                Text( // hiển thị tiêu đề cảnh báo
+                    text = "XÓA PHƯƠNG TIỆN", // đặt nội dung tiêu đề hộp thoại
+                    fontWeight = FontWeight.Bold // làm tiêu đề nổi bật
+                )
+            },
+            text = { // tạo phần nội dung xác nhận
+                Text( // hiển thị câu hỏi xác nhận xóa
+                    text = "Bạn có chắc muốn xóa phương tiện ${vehicleToDelete.plateNumber} không?" // hiển thị đúng biển số xe sắp bị xóa
+                )
+            },
+            confirmButton = { // tạo nút xác nhận xóa
+                TextButton( // tạo nút chữ cho thao tác xóa
+                    onClick = { // xử lý khi người dùng đồng ý xóa
+                        businessVehicleViewModel.deleteVehicle( // yêu cầu ViewModel xóa phương tiện khỏi Room
+                            vehicle = vehicleToDelete // truyền đúng phương tiện đang được xác nhận xóa
+                        )
+                        deletingVehicleId = null // đóng hộp thoại sau khi gửi yêu cầu xóa
+                    }
+                ) {
+                    Text( // hiển thị chữ trên nút xác nhận
+                        text = "XÓA", // đặt tên thao tác xác nhận xóa
+                        color = Color.Red, // dùng màu đỏ cho thao tác nguy hiểm
+                        fontWeight = FontWeight.Bold // làm chữ nút xóa nổi bật
+                    )
+                }
+            },
+            dismissButton = { // tạo nút hủy xóa
+                TextButton( // tạo nút chữ cho thao tác hủy
+                    onClick = { // xử lý khi người dùng không muốn xóa
+                        deletingVehicleId = null // hủy phương tiện đang chờ xóa và đóng hộp thoại
+                    }
+                ) {
+                    Text( // hiển thị chữ trên nút hủy
+                        text = "HỦY", // đặt tên thao tác hủy
+                        color = VehicleBlue, // dùng màu xanh chính của ứng dụng
+                        fontWeight = FontWeight.Bold // làm chữ nút hủy rõ ràng
+                    )
+                }
+            }
+        )
     }
 
     Column( // tạo bố cục chính của màn hình
@@ -514,6 +571,9 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
                             newVehicleStatus = selectedVehicle.status // đưa trạng thái hiện tại lên form
                             vehicleFormError = "" // xóa thông báo lỗi cũ của form
                             showAddVehicleForm = true // mở form để chỉnh sửa phương tiện
+                        },
+                        onDelete = { selectedVehicle -> // nhận phương tiện người dùng vừa chọn xóa
+                            deletingVehicleId = selectedVehicle.id // lưu id để mở hộp thoại xác nhận xóa đúng xe
                         }
                     )
 
@@ -582,7 +642,8 @@ private fun VehicleSummaryCard( // tạo thẻ thống kê dùng chung
 @Composable
 private fun BusinessVehicleListCard( // tạo thẻ hiển thị một phương tiện
     vehicle: BusinessVehicleEntity, // nhận dữ liệu phương tiện trực tiếp từ Room
-    onEdit: (BusinessVehicleEntity) -> Unit // gửi phương tiện được chọn lên màn hình để chỉnh sửa
+    onEdit: (BusinessVehicleEntity) -> Unit, // gửi phương tiện được chọn lên màn hình để chỉnh sửa
+    onDelete: (BusinessVehicleEntity) -> Unit // gửi phương tiện được chọn lên màn hình để xác nhận xóa
 ) {
     val vehicleStatusColor = when (vehicle.status) { // chọn màu theo trạng thái xe
         "Hoạt động" -> Color(0xFF1A9B54) // dùng màu xanh cho xe đang hoạt động
@@ -634,6 +695,19 @@ private fun BusinessVehicleListCard( // tạo thẻ hiển thị một phương 
                             color = VehicleBlue, // dùng màu xanh chính của ứng dụng
                             fontSize = 12.sp, // đặt kích thước chữ nút sửa
                             fontWeight = FontWeight.Bold // làm chữ nút sửa nổi bật
+                        )
+                    }
+
+                    TextButton( // tạo nút yêu cầu xóa phương tiện
+                        onClick = { // xử lý khi người dùng bấm nút xóa
+                            onDelete(vehicle) // gửi đúng phương tiện hiện tại lên hộp thoại xác nhận
+                        }
+                    ) {
+                        Text( // hiển thị chữ trên nút xóa
+                            text = "XÓA", // đặt tên thao tác xóa phương tiện
+                            color = Color.Red, // dùng màu đỏ để thể hiện thao tác nguy hiểm
+                            fontSize = 12.sp, // đặt kích thước chữ nút xóa
+                            fontWeight = FontWeight.Bold // làm chữ nút xóa nổi bật
                         )
                     }
                 }
