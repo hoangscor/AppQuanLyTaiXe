@@ -17,7 +17,16 @@ interface BusinessVehicleDao { // cung cấp các thao tác với bảng busines
         """
     )
     fun getAllVehicles(): Flow<List<BusinessVehicleEntity>> // trả danh sách xe và tự cập nhật khi dữ liệu đổi
-
+    @Query( // kiểm tra biển số phương tiện đã tồn tại trong database hay chưa
+        """
+        SELECT COUNT(*)
+        FROM business_vehicles
+        WHERE LOWER(plateNumber) = LOWER(:plateNumber)
+        """
+    )
+    suspend fun countVehiclesByPlateNumber( // khai báo hàm đếm phương tiện có cùng biển số
+        plateNumber: String // nhận biển số phương tiện cần kiểm tra
+    ): Int // trả về số lượng phương tiện có biển số trùng
     @Query( // tìm phương tiện theo biển số hoặc loại xe
         """
         SELECT *
