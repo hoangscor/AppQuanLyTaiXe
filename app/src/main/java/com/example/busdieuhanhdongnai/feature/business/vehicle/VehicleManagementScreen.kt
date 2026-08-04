@@ -455,15 +455,25 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
                                         maintenanceDate = cleanedMaintenanceDate, // lưu ngày bảo trì đã loại bỏ khoảng trắng
                                         status = cleanedStatus // lưu trạng thái đã loại bỏ khoảng trắng
                                     ) // kết thúc dữ liệu phương tiện mới
+                                    val normalizedPlateNumber = newVehiclePlateNumber // lấy biển số người dùng đang nhập
+                                        .trim() // loại bỏ khoảng trắng thừa ở đầu và cuối biển số
+                                        .uppercase() // chuyển toàn bộ chữ cái trong biển số thành chữ hoa
 
+                                    val normalizedVehicleType = newVehicleType.trim() // loại bỏ khoảng trắng thừa của loại xe
+
+                                    val normalizedDriverName = newVehicleDriverName.trim() // loại bỏ khoảng trắng thừa của tên tài xế
+
+                                    val normalizedMaintenanceDate = newVehicleMaintenanceDate.trim() // loại bỏ khoảng trắng thừa của ngày bảo trì
+
+                                    val normalizedStatus = newVehicleStatus.trim() // loại bỏ khoảng trắng thừa của trạng thái
                                     businessVehicleViewModel.saveVehicleIfPlateNumberAvailable( // kiểm tra và lưu phương tiện
                                         vehicle = BusinessVehicleEntity( // tạo dữ liệu phương tiện từ nội dung form
                                             id = editingVehicleId ?: 0, // giữ id cũ khi sửa và dùng 0 khi thêm mới
-                                            plateNumber = newVehiclePlateNumber.trim(), // loại bỏ khoảng trắng thừa của biển số
-                                            vehicleType = newVehicleType.trim(), // loại bỏ khoảng trắng thừa của loại xe
-                                            driverName = newVehicleDriverName.trim(), // loại bỏ khoảng trắng thừa của tên tài xế
-                                            maintenanceDate = newVehicleMaintenanceDate.trim(), // loại bỏ khoảng trắng thừa của ngày bảo trì
-                                            status = newVehicleStatus.trim() // loại bỏ khoảng trắng thừa của trạng thái
+                                            plateNumber = normalizedPlateNumber, // lưu biển số đã loại khoảng trắng và chuyển thành chữ hoa
+                                            vehicleType = normalizedVehicleType, // lưu loại xe đã loại khoảng trắng thừa
+                                            driverName = normalizedDriverName, // lưu tên tài xế đã loại khoảng trắng thừa
+                                            maintenanceDate = normalizedMaintenanceDate, // lưu ngày bảo trì đã loại khoảng trắng thừa
+                                            status = normalizedStatus // lưu trạng thái đã loại khoảng trắng thừa
                                         ),
                                         editingVehicleId = editingVehicleId, // truyền id để ViewModel phân biệt thêm mới và chỉnh sửa
                                         onResult = { saveSucceeded -> // nhận kết quả kiểm tra và lưu từ ViewModel
