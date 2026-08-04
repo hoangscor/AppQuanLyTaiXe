@@ -108,20 +108,28 @@ class BusinessVehicleViewModel( // tạo ViewModel quản lý dữ liệu phươ
     ) {
         _searchQuery.value = newValue // lưu từ khóa mới vào StateFlow
     }
-    fun saveVehicleIfPlateNumberAvailable( // kiểm tra biển số trước khi lưu phương tiện mới
-        vehicle: BusinessVehicleEntity, // nhận dữ liệu phương tiện người dùng vừa nhập
+    fun saveVehicleIfPlateNumberAvailable( // kiểm tra biển số trước khi thêm mới hoặc chỉnh sửa phương tiện
+        vehicle: BusinessVehicleEntity, // nhận dữ liệu phương tiện cần lưu
+        editingVehicleId: Int? = null, // null là thêm mới, có id là đang chỉnh sửa phương tiện
         onResult: (Boolean) -> Unit // trả true khi lưu thành công và false khi biển số bị trùng
     ) {
         viewModelScope.launch { // chạy kiểm tra và lưu dữ liệu trong coroutine
-            val plateNumberExists = repository.isPlateNumberExists( // yêu cầu Repository kiểm tra biển số
-                plateNumber = vehicle.plateNumber // truyền biển số phương tiện vừa nhập
-            )
+            val plateNumberExists = if (editingVehicleId == null) { // kiểm tra đây có phải thao tác thêm mới hay không
+                repository.isPlateNumberExists( // kiểm tra biển số trên toàn bộ bảng khi thêm mới
+                    plateNumber = vehicle.plateNumber // truyền biển số người dùng vừa nhập
+                )
+            } else { // xử lý khi người dùng đang chỉnh sửa phương tiện
+                repository.isPlateNumberUsedByAnotherVehicle( // kiểm tra biển số nhưng bỏ qua chính xe đang sửa
+                    plateNumber = vehicle.plateNumber, // truyền biển số hiện tại trong form chỉnh sửa
+                    excludedVehicleId = editingVehicleId // loại id của phương tiện đang sửa khỏi kết quả kiểm tra
+                )
+            }
 
-            if (plateNumberExists) { // xử lý khi biển số đã tồn tại trong Room
+            if (plateNumberExists) { // xử lý khi một phương tiện khác đã sử dụng biển số
                 onResult(false) // thông báo cho giao diện rằng không thể lưu
-            } else { // xử lý khi biển số chưa tồn tại
-                repository.saveVehicle( // lưu phương tiện mới vào Room
-                    vehicle = vehicle // truyền đầy đủ dữ liệu phương tiện cần lưu
+            } else { // xử lý khi biển số hợp lệ và chưa thuộc phương tiện khác
+                repository.saveVehicle( // lưu phương tiện mới hoặc cập nhật phương tiện hiện tại
+                    vehicle = vehicle // truyền đầy đủ dữ liệu phương tiện vào Room
                 )
 
                 onResult(true) // thông báo cho giao diện rằng đã lưu thành công

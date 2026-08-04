@@ -52,6 +52,9 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
     var showAddVehicleForm by rememberSaveable { // lưu trạng thái mở hoặc đóng form thêm xe
         mutableStateOf(false) // mặc định chưa hiển thị form thêm phương tiện
     }
+    var editingVehicleId by rememberSaveable { // lưu mã phương tiện đang được chỉnh sửa
+        mutableStateOf<Int?>(null) // null là thêm mới, có id là đang chỉnh sửa phương tiện
+    }
     var newVehiclePlateNumber by rememberSaveable { // lưu biển số phương tiện đang nhập
         mutableStateOf("") // mặc định biển số để trống
     }
@@ -396,22 +399,31 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
                                         status = cleanedStatus // lưu trạng thái đã loại bỏ khoảng trắng
                                     ) // kết thúc dữ liệu phương tiện mới
 
-                                    businessVehicleViewModel.saveVehicleIfPlateNumberAvailable( // kiểm tra biển số trước khi lưu
-                                        vehicle = newVehicle, // truyền phương tiện mới cần kiểm tra
+                                    businessVehicleViewModel.saveVehicleIfPlateNumberAvailable( // kiểm tra và lưu phương tiện
+                                        vehicle = BusinessVehicleEntity( // tạo dữ liệu phương tiện từ nội dung form
+                                            id = editingVehicleId ?: 0, // giữ id cũ khi sửa và dùng 0 khi thêm mới
+                                            plateNumber = newVehiclePlateNumber.trim(), // loại bỏ khoảng trắng thừa của biển số
+                                            vehicleType = newVehicleType.trim(), // loại bỏ khoảng trắng thừa của loại xe
+                                            driverName = newVehicleDriverName.trim(), // loại bỏ khoảng trắng thừa của tên tài xế
+                                            maintenanceDate = newVehicleMaintenanceDate.trim(), // loại bỏ khoảng trắng thừa của ngày bảo trì
+                                            status = newVehicleStatus.trim() // loại bỏ khoảng trắng thừa của trạng thái
+                                        ),
+                                        editingVehicleId = editingVehicleId, // truyền id để ViewModel phân biệt thêm mới và chỉnh sửa
                                         onResult = { saveSucceeded -> // nhận kết quả kiểm tra và lưu từ ViewModel
-                                            if (saveSucceeded) { // xử lý khi biển số chưa tồn tại và đã lưu thành công
-                                                newVehiclePlateNumber = "" // xóa biển số sau khi lưu thành công
-                                                newVehicleType = "" // xóa loại xe sau khi lưu thành công
-                                                newVehicleDriverName = "" // xóa tên tài xế sau khi lưu thành công
-                                                newVehicleMaintenanceDate = "" // xóa ngày bảo trì sau khi lưu thành công
+                                            if (saveSucceeded) { // xử lý khi lưu phương tiện thành công
+                                                newVehiclePlateNumber = "" // xóa biển số sau khi lưu
+                                                newVehicleType = "" // xóa loại xe sau khi lưu
+                                                newVehicleDriverName = "" // xóa tên tài xế sau khi lưu
+                                                newVehicleMaintenanceDate = "" // xóa ngày bảo trì sau khi lưu
                                                 newVehicleStatus = "Hoạt động" // đưa trạng thái về giá trị mặc định
-                                                vehicleFormError = "" // bảo đảm thông báo lỗi được xóa
+                                                vehicleFormError = "" // xóa thông báo lỗi cũ
+                                                editingVehicleId = null // thoát khỏi chế độ chỉnh sửa
                                                 showAddVehicleForm = false // đóng form sau khi lưu thành công
-                                            } else { // xử lý khi biển số đã tồn tại trong Room
-                                                vehicleFormError = "Biển số phương tiện đã tồn tại." // thông báo lỗi trùng biển số
-                                            } // kết thúc xử lý kết quả lưu
-                                        } // kết thúc callback nhận kết quả
-                                    ) // kết thúc yêu cầu kiểm tra và lưu phương tiện
+                                            } else { // xử lý khi biển số thuộc một phương tiện khác
+                                                vehicleFormError = "Biển số phương tiện đã tồn tại." // hiển thị lỗi trùng biển số
+                                            }
+                                        }
+                                    )
                                 } // kết thúc xử lý khi form đã nhập đầy đủ
                             },
                             modifier = Modifier.fillMaxWidth(), // cho nút phủ toàn bộ chiều ngang form
@@ -490,16 +502,26 @@ fun VehicleManagementScreen( // tạo màn hình quản lý phương tiện
                     )
                 }
             } else { // xử lý khi có phương tiện phù hợp
-                filteredBusinessVehicles.forEach { vehicle -> // duyệt từng xe lấy từ Room
-                    BusinessVehicleListCard( // hiển thị thẻ thông tin xe
-                        vehicle = vehicle // truyền dữ liệu xe vào thẻ
+                filteredBusinessVehicles.forEach { vehicle -> // lần lượt lấy từng phương tiện trong danh sách đã lọc
+                    BusinessVehicleListCard( // hiển thị thẻ thông tin xe hiện tại
+                        vehicle = vehicle, // truyền phương tiện hiện tại vào thẻ
+                        onEdit = { selectedVehicle -> // nhận phương tiện người dùng chọn chỉnh sửa
+                            editingVehicleId = selectedVehicle.id // lưu id của phương tiện đang chỉnh sửa
+                            newVehiclePlateNumber = selectedVehicle.plateNumber // đưa biển số hiện tại lên form
+                            newVehicleType = selectedVehicle.vehicleType // đưa loại xe hiện tại lên form
+                            newVehicleDriverName = selectedVehicle.driverName // đưa tài xế hiện tại lên form
+                            newVehicleMaintenanceDate = selectedVehicle.maintenanceDate // đưa ngày bảo trì hiện tại lên form
+                            newVehicleStatus = selectedVehicle.status // đưa trạng thái hiện tại lên form
+                            vehicleFormError = "" // xóa thông báo lỗi cũ của form
+                            showAddVehicleForm = true // mở form để chỉnh sửa phương tiện
+                        }
                     )
 
-                    Spacer( // tạo khoảng cách giữa hai xe
-                        modifier = Modifier.height(10.dp) // đặt chiều cao khoảng cách
+                    Spacer( // tạo khoảng cách giữa hai thẻ phương tiện
+                        modifier = Modifier.height(10.dp) // đặt khoảng cách dọc giữa hai thẻ
                     )
-                }
-            }
+                } // kết thúc vòng lặp danh sách phương tiện
+            } // kết thúc xử lý khi có phương tiện phù hợp
         }
     }
 }
@@ -559,7 +581,8 @@ private fun VehicleSummaryCard( // tạo thẻ thống kê dùng chung
 
 @Composable
 private fun BusinessVehicleListCard( // tạo thẻ hiển thị một phương tiện
-    vehicle: BusinessVehicleEntity // nhận dữ liệu phương tiện trực tiếp từ Room
+    vehicle: BusinessVehicleEntity, // nhận dữ liệu phương tiện trực tiếp từ Room
+    onEdit: (BusinessVehicleEntity) -> Unit // gửi phương tiện được chọn lên màn hình để chỉnh sửa
 ) {
     val vehicleStatusColor = when (vehicle.status) { // chọn màu theo trạng thái xe
         "Hoạt động" -> Color(0xFF1A9B54) // dùng màu xanh cho xe đang hoạt động
@@ -591,12 +614,29 @@ private fun BusinessVehicleListCard( // tạo thẻ hiển thị một phương 
                     fontWeight = FontWeight.Bold // in đậm biển số
                 )
 
-                Text( // hiển thị trạng thái phương tiện
-                    text = vehicle.status, // lấy trạng thái từ dữ liệu xe
-                    color = vehicleStatusColor, // dùng màu tương ứng trạng thái
-                    fontSize = 13.sp, // đặt kích thước chữ
-                    fontWeight = FontWeight.Bold // in đậm trạng thái
-                )
+                Column( // xếp trạng thái và nút sửa theo chiều dọc
+                    horizontalAlignment = Alignment.End // căn nội dung về phía bên phải thẻ
+                ) {
+                    Text( // hiển thị trạng thái phương tiện
+                        text = vehicle.status, // lấy trạng thái từ dữ liệu xe
+                        color = vehicleStatusColor, // dùng màu tương ứng trạng thái
+                        fontSize = 13.sp, // đặt kích thước chữ
+                        fontWeight = FontWeight.Bold // in đậm trạng thái
+                    )
+
+                    TextButton( // tạo nút chỉnh sửa phương tiện
+                        onClick = { // xử lý khi người dùng bấm nút sửa
+                            onEdit(vehicle) // gửi phương tiện hiện tại lên màn hình chính
+                        }
+                    ) {
+                        Text( // hiển thị chữ trên nút sửa
+                            text = "SỬA", // đặt tên thao tác chỉnh sửa
+                            color = VehicleBlue, // dùng màu xanh chính của ứng dụng
+                            fontSize = 12.sp, // đặt kích thước chữ nút sửa
+                            fontWeight = FontWeight.Bold // làm chữ nút sửa nổi bật
+                        )
+                    }
+                }
             }
 
             Spacer( // tạo khoảng cách sau hàng biển số

@@ -35,6 +35,17 @@ class BusinessVehicleRepository( // tạo Repository trung gian giữa DAO và V
 
         return duplicateVehicleCount > 0 // có ít nhất một bản ghi nghĩa là biển số đã tồn tại
     }
+    suspend fun isPlateNumberUsedByAnotherVehicle( // kiểm tra biển số có thuộc phương tiện khác hay không
+        plateNumber: String, // nhận biển số người dùng đang nhập khi chỉnh sửa
+        excludedVehicleId: Int // nhận id phương tiện đang sửa để bỏ qua chính phương tiện đó
+    ): Boolean { // trả true nếu một phương tiện khác đang sử dụng biển số này
+        val duplicateVehicleCount = businessVehicleDao.countVehiclesByPlateNumberExcludingId( // gọi DAO để đếm xe trùng
+            plateNumber = plateNumber.trim(), // loại bỏ khoảng trắng thừa trước và sau biển số
+            excludedVehicleId = excludedVehicleId // truyền id phương tiện đang sửa để loại khỏi kết quả
+        )
+
+        return duplicateVehicleCount > 0 // có ít nhất một xe khác nghĩa là biển số đã được sử dụng
+    }
     suspend fun saveVehicle( // tạo hàm lưu hoặc cập nhật phương tiện
         vehicle: BusinessVehicleEntity // nhận dữ liệu phương tiện cần lưu
     ) {

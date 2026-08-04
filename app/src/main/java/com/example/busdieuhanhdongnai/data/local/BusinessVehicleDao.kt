@@ -27,6 +27,18 @@ interface BusinessVehicleDao { // cung cấp các thao tác với bảng busines
     suspend fun countVehiclesByPlateNumber( // khai báo hàm đếm phương tiện có cùng biển số
         plateNumber: String // nhận biển số phương tiện cần kiểm tra
     ): Int // trả về số lượng phương tiện có biển số trùng
+    @Query( // kiểm tra biển số có thuộc một phương tiện khác hay không
+        """
+        SELECT COUNT(*)
+        FROM business_vehicles
+        WHERE LOWER(plateNumber) = LOWER(:plateNumber)
+          AND id != :excludedVehicleId
+        """
+    )
+    suspend fun countVehiclesByPlateNumberExcludingId( // đếm xe trùng biển số nhưng bỏ qua xe đang sửa
+        plateNumber: String, // nhận biển số mới người dùng đang nhập
+        excludedVehicleId: Int // nhận id của phương tiện hiện tại để loại khỏi kết quả
+    ): Int // trả về số phương tiện khác đang sử dụng biển số này
     @Query( // tìm phương tiện theo biển số hoặc loại xe
         """
         SELECT *
