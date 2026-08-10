@@ -14,5 +14,12 @@ object Routes {
     const val BUSINESS_CUSTOMERS = "business_customers" // màn quản lý khách hàng và vé
 
     const val BUSINESS_VEHICLES = "business_vehicles" // màn quản lý phương tiện của doanh nghiệp
-
+    const val BUSINESS_DRIVERS = "business_drivers" // màn quản lý tài xế của doanh nghiệp
+    const val BUSINESS_ASSIGNMENTS = "business_assignments" // màn phân công lịch chạy của doanh nghiệp
+    const val BUSINESS_REPORTS = "business_reports" // màn báo cáo và thống kê của doanh nghiệp
+    const val BUSINESS_OPERATION_MONITORING = "business_operation_monitoring" // màn theo dõi hoạt động vận hành
+    const val BUSINESS_NOTIFICATIONS = "business_notifications" // màn thông báo điều hành dành cho doanh nghiệp
+    const val BUSINESS_INFORMATION = "business_information" // màn thông tin doanh nghiệp
+    const val BUSINESS_SETTINGS = "business_settings" // màn cài đặt dành cho doanh nghiệp
+    const val BUSINESS_HELP = "business_help" // màn hướng dẫn sử dụng dành cho doanh nghiệp
 }
