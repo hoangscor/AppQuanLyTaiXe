@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.busdieuhanhdongnai.feature.auth.LoginScreen
 import com.example.busdieuhanhdongnai.feature.business.BusinessHomeScreen // màn trang chủ doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.assignment.AssignmentManagementScreen // màn phân công lịch chạy của doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.vehicle.VehicleManagementScreen // màn quản lý phương tiện doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
@@ -90,6 +91,9 @@ fun AppNavGraph() {
                 onOpenVehicles = { // xử lý khi doanh nghiệp bấm Quản lý phương tiện
                     navController.navigate(Routes.BUSINESS_VEHICLES) // chuyển sang màn quản lý phương tiện
                 },
+                onOpenAssignments = { // xử lý khi doanh nghiệp bấm Phân công lịch chạy
+                    navController.navigate(Routes.BUSINESS_ASSIGNMENTS) // chuyển sang màn phân công lịch chạy
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -113,6 +117,13 @@ fun AppNavGraph() {
                 }
             )
         }
+        composable(Routes.BUSINESS_ASSIGNMENTS) { // khai báo màn phân công lịch chạy của doanh nghiệp
+            AssignmentManagementScreen( // hiển thị giao diện phân công lịch chạy
+                onBack = { // xử lý khi người dùng bấm nút quay lại
+                    navController.popBackStack() // quay về màn hình doanh nghiệp trước đó
+                }
+            ) // kết thúc màn phân công lịch chạy
+        } // kết thúc route phân công lịch chạy
         composable(Routes.SCHEDULE) { // khai báo màn lịch trình
             ScheduleScreen(
                 onBack = {
