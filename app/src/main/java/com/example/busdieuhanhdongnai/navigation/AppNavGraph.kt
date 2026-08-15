@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.busdieuhanhdongnai.feature.auth.LoginScreen
 import com.example.busdieuhanhdongnai.feature.business.BusinessHomeScreen // màn trang chủ doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.assignment.AssignmentManagementScreen // màn phân công lịch chạy của doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.driver.DriverManagementScreen // màn quản lý tài xế doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.vehicle.VehicleManagementScreen // màn quản lý phương tiện doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
@@ -88,6 +89,9 @@ fun AppNavGraph() {
                 onOpenCustomers = { // xử lý khi doanh nghiệp mở chức năng khách hàng
                     navController.navigate(Routes.BUSINESS_CUSTOMERS) // chuyển sang màn quản lý khách hàng
                 },
+                onOpenDrivers = { // xử lý khi doanh nghiệp bấm Quản lý tài xế
+                    navController.navigate(Routes.BUSINESS_DRIVERS) // chuyển sang màn quản lý tài xế
+                },
                 onOpenVehicles = { // xử lý khi doanh nghiệp bấm Quản lý phương tiện
                     navController.navigate(Routes.BUSINESS_VEHICLES) // chuyển sang màn quản lý phương tiện
                 },
@@ -110,6 +114,7 @@ fun AppNavGraph() {
                 }
             )
         }
+
         composable(Routes.BUSINESS_VEHICLES) { // khai báo màn quản lý phương tiện doanh nghiệp
             VehicleManagementScreen(
                 onBack = { // xử lý khi bấm nút quay lại
@@ -124,6 +129,13 @@ fun AppNavGraph() {
                 }
             ) // kết thúc màn phân công lịch chạy
         } // kết thúc route phân công lịch chạy
+        composable(Routes.BUSINESS_DRIVERS) { // khai báo màn quản lý tài xế doanh nghiệp
+            DriverManagementScreen( // hiển thị giao diện quản lý tài xế
+                onBack = { // xử lý khi người dùng bấm quay lại
+                    navController.popBackStack() // quay về màn hình doanh nghiệp trước đó
+                }
+            ) // kết thúc màn quản lý tài xế
+        } // kết thúc route quản lý tài xế
         composable(Routes.SCHEDULE) { // khai báo màn lịch trình
             ScheduleScreen(
                 onBack = {
