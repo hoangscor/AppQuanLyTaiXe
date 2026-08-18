@@ -228,7 +228,8 @@ fun BusinessHomeScreen(
                 onOpenCustomers = onOpenCustomers, // truyền chức năng khách hàng và vé
                 onOpenAssignments = onOpenAssignments, // truyền chức năng phân công
                 onOpenReports = onOpenReports, // truyền chức năng báo cáo
-                onLogout = onLogout // truyền chức năng đăng xuất hiện tại
+                onOpenOperationMonitoring = onOpenOperationMonitoring, // THÊM: truyền chức năng theo dõi vận hành xuống trang chủ
+                onLogout = onLogout // truyền chức năng đăng xuất
             )
 
             TextButton( // tạo nút ba gạch ở góc trên bên trái
@@ -266,6 +267,7 @@ private fun BusinessHomeContent(
     onOpenCustomers: () -> Unit = {}, // mở màn khách hàng và quản lý vé
     onOpenAssignments: () -> Unit = {}, // mở màn phân công vận hành
     onOpenReports: () -> Unit = {}, // mở màn báo cáo thống kê
+    onOpenOperationMonitoring: () -> Unit = {}, // THÊM: mở màn theo dõi hoạt động
     onLogout: () -> Unit = {} // quay về màn đăng nhập
 ) {
     Column(
@@ -423,9 +425,72 @@ private fun BusinessHomeContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp)) // cách chức năng với nút đăng xuất
-            Spacer( // tạo khoảng cách với hàng chức năng phía trên
-                modifier = Modifier.height(12.dp) // đặt chiều cao khoảng cách
+// THÊM: tạo khoảng cách trước chức năng theo dõi hoạt động
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+
+// THÊM: tạo thẻ Theo dõi hoạt động toàn chiều ngang
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth() // cho thẻ phủ toàn bộ chiều ngang
+                    .height(112.dp) // giữ cùng chiều cao với thẻ Khách hàng
+                    .clickable {
+                        onOpenOperationMonitoring() // mở màn Theo dõi hoạt động
+                    },
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White // giữ phong cách chung của trang chủ
+                ),
+                shape = RoundedCornerShape(14.dp) // bo góc giống các thẻ hiện tại
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📍", // biểu tượng theo dõi vận hành
+                        fontSize = 38.sp
+                    )
+
+                    Spacer(
+                        modifier = Modifier.width(18.dp)
+                    )
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Theo dõi hoạt động", // tên chức năng
+                            color = BusinessBlue,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(6.dp)
+                        )
+
+                        Text(
+                            text = "Giám sát tình trạng vận hành", // mô tả chức năng
+                            color = Color.Gray,
+                            fontSize = 13.sp
+                        )
+                    }
+
+                    Text(
+                        text = "›", // ký hiệu mở màn tiếp theo
+                        color = BusinessBlue,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+// THÊM: khoảng cách giữa Theo dõi hoạt động và Khách hàng
+            Spacer(
+                modifier = Modifier.height(12.dp)
             )
 
             Card( // tạo thẻ chức năng Khách hàng toàn chiều ngang
