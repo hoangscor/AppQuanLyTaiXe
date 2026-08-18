@@ -26,6 +26,7 @@ import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
 import com.example.busdieuhanhdongnai.feature.business.notification.BusinessNotificationScreen // THÊM: màn thông báo điều hành doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.information.BusinessInformationScreen // THÊM: màn thông tin doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.settings.BusinessSettingsScreen // THÊM: màn cài đặt doanh nghiệp
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
@@ -113,6 +114,9 @@ fun AppNavGraph() {
                 onOpenBusinessInformation = { // THÊM: xử lý khi bấm Thông tin doanh nghiệp
                     navController.navigate(Routes.BUSINESS_INFORMATION) // THÊM: chuyển sang màn thông tin doanh nghiệp
                 },
+                onOpenSettings = { // THÊM: xử lý khi doanh nghiệp bấm Cài đặt
+                    navController.navigate(Routes.BUSINESS_SETTINGS) // THÊM: chuyển sang màn cài đặt doanh nghiệp
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -146,6 +150,13 @@ fun AppNavGraph() {
         }
         composable(Routes.BUSINESS_INFORMATION) { // THÊM: khai báo route thông tin doanh nghiệp
             BusinessInformationScreen( // THÊM: hiển thị màn thông tin doanh nghiệp
+                onBack = { // THÊM: xử lý khi người dùng bấm quay lại
+                    navController.popBackStack() // THÊM: quay về trang chủ doanh nghiệp
+                }
+            )
+        }
+        composable(Routes.BUSINESS_SETTINGS) { // THÊM: khai báo route màn cài đặt doanh nghiệp
+            BusinessSettingsScreen( // THÊM: hiển thị giao diện cài đặt
                 onBack = { // THÊM: xử lý khi người dùng bấm quay lại
                     navController.popBackStack() // THÊM: quay về trang chủ doanh nghiệp
                 }
