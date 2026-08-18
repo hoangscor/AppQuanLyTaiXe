@@ -26,6 +26,7 @@ import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
 import com.example.busdieuhanhdongnai.feature.business.notification.BusinessNotificationScreen // THÊM: màn thông báo điều hành doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.information.BusinessInformationScreen // THÊM: màn thông tin doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.help.BusinessHelpScreen // THÊM: màn hướng dẫn sử dụng doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.settings.BusinessSettingsScreen // THÊM: màn cài đặt doanh nghiệp
 @Composable
 fun AppNavGraph() {
@@ -117,6 +118,9 @@ fun AppNavGraph() {
                 onOpenSettings = { // THÊM: xử lý khi doanh nghiệp bấm Cài đặt
                     navController.navigate(Routes.BUSINESS_SETTINGS) // THÊM: chuyển sang màn cài đặt doanh nghiệp
                 },
+                onOpenHelp = { // THÊM: xử lý khi doanh nghiệp bấm Hướng dẫn sử dụng
+                    navController.navigate(Routes.BUSINESS_HELP) // THÊM: mở màn hướng dẫn sử dụng
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -162,6 +166,13 @@ fun AppNavGraph() {
                 }
             )
         }
+        composable(Routes.BUSINESS_HELP) { // THÊM: khai báo route hướng dẫn sử dụng doanh nghiệp
+            BusinessHelpScreen( // THÊM: hiển thị màn hướng dẫn sử dụng
+                onBack = { // THÊM: xử lý khi người dùng bấm quay lại
+                    navController.popBackStack() // THÊM: quay về trang chủ doanh nghiệp
+                }
+            )
+        } // THÊM: kết thúc route hướng dẫn sử dụng
         composable(Routes.BUSINESS_VEHICLES) { // khai báo màn quản lý phương tiện doanh nghiệp
             VehicleManagementScreen(
                 onBack = { // xử lý khi bấm nút quay lại
