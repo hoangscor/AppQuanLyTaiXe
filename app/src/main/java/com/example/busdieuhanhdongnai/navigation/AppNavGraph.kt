@@ -25,6 +25,7 @@ import com.example.busdieuhanhdongnai.feature.business.monitoring.OperationMonit
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
 import com.example.busdieuhanhdongnai.feature.business.notification.BusinessNotificationScreen // THÊM: màn thông báo điều hành doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.information.BusinessInformationScreen // THÊM: màn thông tin doanh nghiệp
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
@@ -109,6 +110,9 @@ fun AppNavGraph() {
                 onOpenBusinessNotifications = { // THÊM: xử lý khi doanh nghiệp bấm Thông báo điều hành
                     navController.navigate(Routes.BUSINESS_NOTIFICATIONS) // THÊM: chuyển sang màn thông báo doanh nghiệp
                 },
+                onOpenBusinessInformation = { // THÊM: xử lý khi bấm Thông tin doanh nghiệp
+                    navController.navigate(Routes.BUSINESS_INFORMATION) // THÊM: chuyển sang màn thông tin doanh nghiệp
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -125,6 +129,7 @@ fun AppNavGraph() {
                 }
             )
         }
+
         composable(Routes.BUSINESS_OPERATION_MONITORING) { // khai báo route theo dõi hoạt động doanh nghiệp
             OperationMonitoringScreen( // hiển thị màn theo dõi hoạt động
                 onBack = { // xử lý khi người dùng bấm quay lại
@@ -139,7 +144,13 @@ fun AppNavGraph() {
                 }
             )
         }
-
+        composable(Routes.BUSINESS_INFORMATION) { // THÊM: khai báo route thông tin doanh nghiệp
+            BusinessInformationScreen( // THÊM: hiển thị màn thông tin doanh nghiệp
+                onBack = { // THÊM: xử lý khi người dùng bấm quay lại
+                    navController.popBackStack() // THÊM: quay về trang chủ doanh nghiệp
+                }
+            )
+        }
         composable(Routes.BUSINESS_VEHICLES) { // khai báo màn quản lý phương tiện doanh nghiệp
             VehicleManagementScreen(
                 onBack = { // xử lý khi bấm nút quay lại
