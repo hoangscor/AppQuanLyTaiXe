@@ -24,7 +24,7 @@ import com.example.busdieuhanhdongnai.feature.business.vehicle.VehicleManagement
 import com.example.busdieuhanhdongnai.feature.business.monitoring.OperationMonitoringScreen // màn theo dõi hoạt động doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.driver.DriverHomeScreen
 import com.example.busdieuhanhdongnai.feature.business.customer.CustomerManagementScreen // màn quản lý khách hàng và vé
-
+import com.example.busdieuhanhdongnai.feature.business.notification.BusinessNotificationScreen // THÊM: màn thông báo điều hành doanh nghiệp
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
@@ -106,6 +106,9 @@ fun AppNavGraph() {
                 onOpenOperationMonitoring = { // xử lý khi doanh nghiệp mở Theo dõi hoạt động
                     navController.navigate(Routes.BUSINESS_OPERATION_MONITORING) // chuyển sang màn theo dõi hoạt động
                 },
+                onOpenBusinessNotifications = { // THÊM: xử lý khi doanh nghiệp bấm Thông báo điều hành
+                    navController.navigate(Routes.BUSINESS_NOTIFICATIONS) // THÊM: chuyển sang màn thông báo doanh nghiệp
+                },
                 onLogout = { // xử lý khi doanh nghiệp đăng xuất
                     navController.navigate(Routes.LOGIN) { // quay về màn đăng nhập
                         popUpTo(Routes.BUSINESS_HOME) { // xóa trang chủ doanh nghiệp khỏi lịch sử
@@ -126,6 +129,13 @@ fun AppNavGraph() {
             OperationMonitoringScreen( // hiển thị màn theo dõi hoạt động
                 onBack = { // xử lý khi người dùng bấm quay lại
                     navController.popBackStack() // quay về trang chủ doanh nghiệp
+                }
+            )
+        }
+        composable(Routes.BUSINESS_NOTIFICATIONS) { // THÊM: khai báo route thông báo điều hành doanh nghiệp
+            BusinessNotificationScreen( // THÊM: hiển thị màn thông báo điều hành
+                onBack = { // THÊM: xử lý khi người dùng bấm quay lại
+                    navController.popBackStack() // THÊM: quay về trang chủ doanh nghiệp
                 }
             )
         }
