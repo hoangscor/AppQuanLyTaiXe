@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.busdieuhanhdongnai.feature.auth.LoginScreen
 import com.example.busdieuhanhdongnai.feature.business.BusinessHomeScreen // màn trang chủ doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.assignment.AssignmentManagementScreen // màn phân công lịch chạy của doanh nghiệp
+import com.example.busdieuhanhdongnai.feature.business.assignment.AssignmentFormScreen // THÊM: màn tạo và chỉnh sửa phân công
 import com.example.busdieuhanhdongnai.feature.business.driver.DriverManagementScreen // màn quản lý tài xế doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.report.BusinessReportScreen // màn báo cáo và thống kê doanh nghiệp
 import com.example.busdieuhanhdongnai.feature.business.vehicle.VehicleManagementScreen // màn quản lý phương tiện doanh nghiệp
@@ -34,7 +35,7 @@ fun AppNavGraph() {
     var selectedRoute by rememberSaveable { mutableStateOf("Tuyến 01: Bến xe A → Bến xe B") } // giữ tuyến xe được chọn
     var selectedVehiclePlate by rememberSaveable { mutableStateOf("51B-123.45") } // giữ biển số xe được chọn
     var selectedScheduledTime by rememberSaveable { mutableStateOf("07:00 - 08:00") } // giữ giờ dự kiến của chuyến được chọn
-
+    var selectedBusinessAssignmentRoute by rememberSaveable { mutableStateOf("") } // THÊM: giữ tên tuyến phân công doanh nghiệp đang được chọn
     NavHost(
         navController = navController,
         startDestination = Routes.LOGIN
@@ -180,13 +181,44 @@ fun AppNavGraph() {
                 }
             )
         }
-        composable(Routes.BUSINESS_ASSIGNMENTS) { // khai báo màn phân công lịch chạy của doanh nghiệp
-            AssignmentManagementScreen( // hiển thị giao diện phân công lịch chạy
-                onBack = { // xử lý khi người dùng bấm nút quay lại
-                    navController.popBackStack() // quay về màn hình doanh nghiệp trước đó
+        composable(Routes.BUSINESS_ASSIGNMENTS) { // GIỮ: khai báo màn phân công lịch chạy
+            AssignmentManagementScreen( // GIỮ: hiển thị danh sách phân công
+                onBack = { // GIỮ: xử lý nút quay lại
+                    navController.popBackStack() // GIỮ: quay về trang chủ doanh nghiệp
+                },
+                onCreateAssignment = { // THÊM: xử lý khi bấm TẠO PHÂN CÔNG
+                    selectedBusinessAssignmentRoute = "" // THÊM: xóa tuyến cũ để mở chế độ tạo mới
+                    navController.navigate(Routes.BUSINESS_ASSIGNMENT_CREATE) // THÊM: mở màn tạo phân công
+                },
+                onOpenAssignment = { routeName -> // THÊM: nhận tuyến khi bấm XEM / CHỈNH SỬA
+                    selectedBusinessAssignmentRoute = routeName // THÊM: lưu tuyến vừa được chọn
+                    navController.navigate(Routes.BUSINESS_ASSIGNMENT_DETAIL) // THÊM: mở màn chi tiết phân công
                 }
-            ) // kết thúc màn phân công lịch chạy
-        } // kết thúc route phân công lịch chạy
+            ) // GIỮ: kết thúc màn phân công
+        } // GIỮ: kết thúc route phân công
+        composable(Routes.BUSINESS_ASSIGNMENT_CREATE) { // THÊM: khai báo route tạo phân công mới
+            AssignmentFormScreen( // THÊM: mở biểu mẫu phân công ở chế độ tạo mới
+                routeName = "", // THÊM: để trống tên tuyến nhằm kích hoạt chế độ tạo mới
+                onBack = { // THÊM: xử lý nút quay lại
+                    navController.popBackStack() // THÊM: quay lại danh sách phân công
+                },
+                onSave = { // THÊM: tạm xử lý nút TẠO PHÂN CÔNG khi chưa có chức năng lưu thật
+                    navController.popBackStack() // THÊM: quay lại danh sách sau khi bấm nút
+                }
+            ) // THÊM: kết thúc biểu mẫu tạo mới
+        } // THÊM: kết thúc route tạo phân công
+
+        composable(Routes.BUSINESS_ASSIGNMENT_DETAIL) { // THÊM: khai báo route xem hoặc chỉnh sửa phân công
+            AssignmentFormScreen( // THÊM: dùng lại biểu mẫu chung ở chế độ chỉnh sửa
+                routeName = selectedBusinessAssignmentRoute, // THÊM: truyền tuyến người dùng vừa chọn
+                onBack = { // THÊM: xử lý nút quay lại
+                    navController.popBackStack() // THÊM: quay lại danh sách phân công
+                },
+                onSave = { // THÊM: tạm xử lý nút LƯU THAY ĐỔI
+                    navController.popBackStack() // THÊM: quay lại danh sách khi chưa có lưu dữ liệu thật
+                }
+            ) // THÊM: kết thúc biểu mẫu chỉnh sửa
+        } // THÊM: kết thúc route chi tiết phân công
         composable(Routes.BUSINESS_DRIVERS) { // khai báo màn quản lý tài xế doanh nghiệp
             DriverManagementScreen( // hiển thị giao diện quản lý tài xế
                 onBack = { // xử lý khi người dùng bấm quay lại

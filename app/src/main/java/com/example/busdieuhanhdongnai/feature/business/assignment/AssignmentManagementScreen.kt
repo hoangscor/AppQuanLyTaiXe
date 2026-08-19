@@ -70,7 +70,9 @@ private val sampleAssignments = listOf( // tạo danh sách dữ liệu mẫu đ
 
 @Composable // đánh dấu hàm giao diện Compose
 fun AssignmentManagementScreen( // tạo màn hình quản lý phân công lịch chạy
-    onBack: () -> Unit = {} // nhận hành động quay lại trang chủ doanh nghiệp
+    onBack: () -> Unit = {}, // nhận hành động quay lại trang chủ doanh nghiệp
+    onCreateAssignment: () -> Unit = {}, // THÊM: nhận hành động tạo phân công mới
+    onOpenAssignment: (String) -> Unit = { _ -> } // THÊM: nhận hành động mở một lịch phân công theo tên tuyến
 ) { // bắt đầu màn hình phân công
     Column( // tạo bố cục chính theo chiều dọc
         modifier = Modifier // bắt đầu cấu hình màn hình
@@ -174,7 +176,7 @@ fun AssignmentManagementScreen( // tạo màn hình quản lý phân công lịc
             ) // kết thúc khoảng cách
 
             Button( // tạo nút thêm lịch phân công mới
-                onClick = {}, // tạm thời chưa xử lý chức năng khi bấm
+                onClick = onCreateAssignment, // SỬA: chuyển thao tác bấm nút ra callback bên ngoài
                 modifier = Modifier.fillMaxWidth(), // cho nút phủ toàn bộ chiều ngang
                 colors = ButtonDefaults.buttonColors( // thiết lập màu nút
                     containerColor = AssignmentBlue // dùng màu xanh chính
@@ -205,7 +207,8 @@ fun AssignmentManagementScreen( // tạo màn hình quản lý phân công lịc
 
             sampleAssignments.forEach { assignment -> // lần lượt hiển thị từng lịch chạy mẫu
                 AssignmentListCard( // tạo thẻ thông tin cho lịch chạy hiện tại
-                    assignment = assignment // truyền dữ liệu lịch chạy vào thẻ
+                    assignment = assignment, // SỬA: truyền dữ liệu lịch chạy vào thẻ
+                    onOpenAssignment = onOpenAssignment // THÊM: truyền callback mở lịch chạy xuống thẻ
                 ) // kết thúc thẻ lịch chạy
 
                 Spacer( // tạo khoảng cách giữa hai lịch chạy
@@ -262,7 +265,8 @@ private fun AssignmentOverviewCard( // tạo thẻ hiển thị một chỉ số
 
 @Composable // đánh dấu hàm giao diện Compose
 private fun AssignmentListCard( // tạo thẻ hiển thị một lịch chạy
-    assignment: AssignmentUiModel // nhận dữ liệu lịch chạy cần hiển thị
+    assignment: AssignmentUiModel, // SỬA: nhận dữ liệu lịch chạy cần hiển thị
+    onOpenAssignment: (String) -> Unit // THÊM: nhận callback mở lịch phân công
 ) { // bắt đầu thẻ lịch chạy
     val statusColor = when (assignment.status) { // chọn màu theo trạng thái lịch chạy
         "Đã phân công" -> AssignmentGreen // dùng màu xanh lá khi đã hoàn tất phân công
@@ -335,7 +339,7 @@ private fun AssignmentListCard( // tạo thẻ hiển thị một lịch chạy
             ) // kết thúc khoảng cách
 
             TextButton( // tạo nút thao tác cho lịch chạy
-                onClick = {}, // tạm thời chưa xử lý chức năng
+                onClick = { onOpenAssignment(assignment.routeName) }, // SỬA: gửi lịch chạy được chọn ra ngoài
                 modifier = Modifier.fillMaxWidth() // cho vùng nút phủ toàn bộ chiều ngang
             ) { // bắt đầu nội dung nút
                 Text( // hiển thị tên thao tác
